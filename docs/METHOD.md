@@ -40,3 +40,7 @@ Random Forest는 표 형식의 비선형 변수 관계와 서로 다른 단위�
 - [scikit-learn RandomForestRegressor](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html): bootstrap, 전체 변수 설정, 나무 예측 평균
 - [GroupKFold](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GroupKFold.html): 그룹 중복을 방지하는 검증
 - [Leaflet 1.9.4](https://leafletjs.com/reference.html): 지도 라이브러리, 로컬 vendor 포함
+## 현재 위치 추정
+
+브라우저가 제공한 위도·경도에 관측 센서가 정확히 겹치지 않을 수 있으므로, 지도에서는 현재 위치 주변의 같은 시간대 센서 최대 8개를 사용합니다. Haversine 거리 `d`를 계산하고 `w = 1 / (d_m + 8)^2`를 적용해 예측 지수·환경값·시설 집계를 가중 평균합니다. 8m는 위치 오차가 있는 아주 가까운 센서의 가중치가 과도하게 커지는 것을 막는 완충값입니다. 이 값은 실제 안전 확률이 아니라 저장된 관측 표본을 현재 위치에 옮겨 읽는 거리 기반 추정입니다.
+

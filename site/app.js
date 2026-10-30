@@ -8,7 +8,7 @@
     return;
   }
   const rows = data.observations;
-  const state = { hour: '23', selected: null, markers: new Map(), filtered: [] };
+  const state = { hour: '23', selected: null, markers: new Map(), filtered: [], userLocation: null, userMarker: null, estimate: null };
   const map = L.map('map', { scrollWheelZoom: false }).setView([37.56, 126.99], 11);
   const layer = L.layerGroup().addTo(map);
   const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -20,6 +20,18 @@
   const text = (id, value) => { byId(id).textContent = value; };
   const color = (value) => getComputedStyle(document.documentElement).getPropertyValue(value < 75 ? '--low' : value < 90 ? '--middle' : '--high').trim();
   const timeLabel = (row) => row.time.slice(11, 16);
+  const distanceKm = (a, b) => {
+    const rad = Math.PI / 180; const dLat = (b.lat - a.lat) * rad; const dLon = (b.lon - a.lon) * rad;
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
+    return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+  };
+  const weightedEstimate = (location, candidates) => {
+    const ranked = candidates.map((row) => ({ row, km: distanceKm(location, row) })).sort((a, b) => a.km - b.km).slice(0, 8);
+    const weights = ranked.map(({ km }) => 1 / ((km * 1000 + 8) ** 2));
+    const total = weights.reduce((sum, value) => sum + value, 0);
+    const average = (index) => ranked.reduce((sum, item, i) => sum + item.row.features[index] * weights[i], 0) / total;
+    return { ranked, prediction: ranked.reduce((sum, item, i) => sum + item.row.prediction * weights[i], 0) / total, target: ranked.reduce((sum, item, i) => sum + item.row.target * weights[i], 0) / total, features: [average(0), average(1), average(2), average(3), average(4), average(5), average(6), average(7), average(8), average(9)] };
+  };
   const select = (row, move = false) => {
     state.selected = row;
     text('sensor', row.id);
@@ -30,6 +42,8 @@
     text('noise', `${row.features[4]} dB`);
     text('cctv', row.features[7]); text('light', row.features[8]); text('security', row.features[9]);
     text('coordinates', `${row.lat.toFixed(6)}, ${row.lon.toFixed(6)}`);
+    text('distance-note', '센서 관측값');
+    state.estimate = null;
     byId('point').value = row.id;
     state.markers.forEach((marker, id) => marker.setStyle({ radius: id === row.id ? 10 : 5, weight: id === row.id ? 3 : 1 }));
     if (move) map.setView([row.lat, row.lon], 15, { animate: false });
@@ -44,9 +58,28 @@
       history.append(button);
     });
   };
+  const selectEstimate = (estimate) => {
+    state.estimate = estimate;
+    state.selected = null;
+    const nearest = estimate.ranked[0];
+    text('sensor', '내 위치 추정');
+    text('timestamp', `2025. 10. 12. ${state.hour}:07`);
+    text('distance-note', `가까운 센서 ${estimate.ranked.length}개 · 최단 ${Math.round(nearest.km * 1000)}m`);
+    text('prediction', estimate.prediction.toFixed(1)); text('target', estimate.target.toFixed(1));
+    text('lux', `${estimate.features[1].toFixed(1)} lux`); text('noise', `${estimate.features[4].toFixed(1)} dB`);
+    text('cctv', estimate.features[7].toFixed(1)); text('light', estimate.features[8].toFixed(1)); text('security', estimate.features[9].toFixed(1));
+    text('coordinates', `${state.userLocation.lat.toFixed(6)}, ${state.userLocation.lon.toFixed(6)}`);
+    byId('point').value = '';
+    state.markers.forEach((marker) => marker.setStyle({ radius: 5, weight: 1 }));
+    const history = byId('history'); history.replaceChildren();
+    const button = document.createElement('button'); button.type = 'button'; button.setAttribute('aria-pressed', 'true'); button.setAttribute('aria-label', '현재 위치 거리 가중 추정');
+    const time = document.createElement('span'); time.textContent = `${state.hour}:07`; const score = document.createElement('strong'); score.textContent = estimate.prediction.toFixed(1); button.append(time, score); history.append(button);
+    byId('focus').disabled = false;
+  };
   function update() {
     state.hour = byId('hour').value;
     const query = byId('search').value.trim().toLowerCase();
+    const hourRows = rows.filter((row) => row.time.slice(11,13) === state.hour);
     state.filtered = rows.filter((row) => row.time.slice(11,13) === state.hour && `${row.id} ${row.lat} ${row.lon}`.toLowerCase().includes(query));
     layer.clearLayers(); state.markers.clear(); byId('point').replaceChildren();
     state.filtered.forEach((row) => {
@@ -56,13 +89,16 @@
       marker.bindTooltip(label); marker.on('click', () => select(row)); state.markers.set(row.id, marker);
     });
     const selected = state.filtered.find((row) => row.id === state.selected?.id) || state.filtered[0];
-    byId('focus').disabled = !selected;
-    if (selected) {
+    byId('focus').disabled = !(selected || state.userLocation);
+    if (state.userLocation && hourRows.length) {
+      selectEstimate(weightedEstimate(state.userLocation, hourRows));
+      text('status', `${state.hour}:07 · 현재 위치에서 가까운 센서 ${Math.min(8, hourRows.length)}개를 거리 가중해 추정했습니다.`);
+    } else if (selected) {
       select(selected);
       text('status', `${state.hour}:07 · ${state.filtered.length.toLocaleString()}개 지점 · 지도 원 또는 지점 선택창으로 관측을 선택하세요.`);
     } else {
       state.selected = null;
-      ['sensor','timestamp','prediction','target','lux','noise','cctv','light','security','coordinates'].forEach((id) => text(id, '—'));
+      ['sensor','timestamp','prediction','target','lux','noise','cctv','light','security','coordinates','distance-note'].forEach((id) => text(id, '—'));
       byId('history').replaceChildren();
       text('status', '검색 결과가 없습니다. 검색어를 지우거나 다른 시간을 선택해 주세요.');
     }
@@ -72,6 +108,16 @@
   byId('point').addEventListener('change', () => { const row = state.filtered.find((r) => r.id === byId('point').value); if (row) select(row, true); });
   byId('focus').addEventListener('click', () => { if (state.selected) select(state.selected, true); });
   byId('overview').addEventListener('click', () => map.fitBounds(rows.map((r) => [r.lat,r.lon]), { padding: [24,24], animate: false }));
+  byId('locate').addEventListener('click', () => {
+    if (!navigator.geolocation) { text('status', '이 브라우저에서는 위치 기능을 사용할 수 없습니다.'); return; }
+    text('status', '현재 위치를 확인하고 있습니다. 브라우저의 위치 권한을 허용해 주세요.');
+    navigator.geolocation.getCurrentPosition((position) => {
+      state.userLocation = { lat: position.coords.latitude, lon: position.coords.longitude };
+      if (state.userMarker) map.removeLayer(state.userMarker);
+      state.userMarker = L.circleMarker([state.userLocation.lat, state.userLocation.lon], { radius: 9, color: '#f4c95d', fillColor: '#f4c95d', fillOpacity: .95, weight: 3 }).addTo(map).bindTooltip('현재 위치', { permanent: false });
+      map.setView([state.userLocation.lat, state.userLocation.lon], 15, { animate: false }); update();
+    }, () => text('status', '현재 위치를 확인하지 못했습니다. 권한을 허용하거나 센서 지도를 이용해 주세요.'), { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+  });
   update();
   map.fitBounds(rows.map((r) => [r.lat,r.lon]), { padding: [24,24], animate: false });
 })();

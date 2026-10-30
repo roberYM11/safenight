@@ -6,3 +6,4 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}button:active{transform:none}}
 body{word-break:keep-all;overflow-wrap:anywhere}
 .leaflet-bar a,.leaflet-touch .leaflet-bar a{width:44px;height:44px;line-height:44px}
+.toolbar .compact{width:auto;white-space:nowrap;margin:0}.detail-head small{display:block}.detail-head #distance-note{color:var(--accent)}

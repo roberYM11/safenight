@@ -25,13 +25,14 @@
         <div><label for="hour">관측 시간</label><select id="hour"><option value="00">00:07</option><option value="01">01:07</option><option value="02">02:07</option><option value="22">22:07</option><option value="23" selected>23:07</option></select></div>
         <div class="search"><label for="search">센서 찾기</label><input id="search" type="search" placeholder="센서 ID 또는 좌표로 검색" autocomplete="off"></div>
         <div class="point-select"><label for="point">관측 지점 선택</label><select id="point" aria-label="관측 지점 선택"></select></div>
+        <button id="locate" class="primary compact">내 위치 사용</button>
         <button id="overview" class="secondary">서울 전체 보기</button>
       </div>
       <p id="status" class="status" role="status" aria-live="polite">관측 데이터를 준비하고 있습니다.</p>
       <div class="explorer">
         <div class="map-wrap"><div id="map" aria-label="서울 관측 지점 지도"></div><div class="map-caption"><span>예측 지수</span><i class="legend low"></i><span>75 미만</span><i class="legend middle"></i><span>75–90</span><i class="legend high"></i><span>90 이상</span></div><p class="tile-status" id="tile-status" hidden>배경지도 연결을 확인해 주세요. 관측 좌표와 지점 선택은 계속 사용할 수 있습니다.</p></div>
         <aside class="detail" aria-label="선택 지점의 환경과 예측" aria-live="polite">
-          <div class="detail-head"><span>선택한 관측</span><strong id="sensor">—</strong><small id="timestamp">—</small></div>
+          <div class="detail-head"><span>선택한 관측</span><strong id="sensor">—</strong><small id="timestamp">—</small><small id="distance-note">—</small></div>
           <div class="score"><span>예측 안전도 지수</span><div><strong id="prediction">—</strong><span>/ 100</span></div></div>
           <div class="rule"><span>규칙으로 계산한 지수</span><strong id="target">—</strong></div>
           <h2>그 시간의 환경</h2><dl class="metrics"><div><dt>평균 밝기</dt><dd id="lux">—</dd></div><div><dt>평균 소음</dt><dd id="noise">—</dd></div></dl>
