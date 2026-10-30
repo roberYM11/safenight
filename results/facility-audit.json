@@ -1,0 +1,40 @@
+{
+  "radius_m": 25,
+  "reports": [
+    {
+      "file": "securitylights.csv",
+      "rows": 195702,
+      "valid_wgs84_rows": 195702,
+      "invalid_wgs84_rows": 0,
+      "unique_valid_coordinates": 144187,
+      "maximum_coordinate_multiplicity": 807,
+      "saved_count_mismatch_rows": 0,
+      "max_saved_count": 221,
+      "distinct_coordinate_count_at_saved_max": 1,
+      "max_count_coordinate": [
+        37.545028041,
+        126.864660671
+      ],
+      "raw_count_at_saved_max": 221,
+      "max_distinct_coordinate_count": 8
+    },
+    {
+      "file": "streetlights.csv",
+      "rows": 19316,
+      "valid_wgs84_rows": 19291,
+      "invalid_wgs84_rows": 25,
+      "unique_valid_coordinates": 19291,
+      "maximum_coordinate_multiplicity": 1,
+      "saved_count_mismatch_rows": 0,
+      "max_saved_count": 2,
+      "distinct_coordinate_count_at_saved_max": 2,
+      "max_count_coordinate": [
+        37.476600637,
+        126.98263907
+      ],
+      "raw_count_at_saved_max": 2,
+      "max_distinct_coordinate_count": 2
+    }
+  ],
+  "note": "Distinct coordinates are not verified unique physical devices."
+}

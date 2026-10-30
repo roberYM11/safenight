@@ -1,0 +1,139 @@
+{
+  "review_date": "2026-10-31",
+  "observed_date": "2025-10-12",
+  "rows": 3230,
+  "coordinates": 652,
+  "features": [
+    "lux_max",
+    "lux_avg",
+    "lux_min",
+    "noise_max",
+    "noise_avg",
+    "noise_min",
+    "noise_range_proxy",
+    "cctv",
+    "light",
+    "security"
+  ],
+  "target": "original rule recomputed on restored inputs",
+  "validation": "GroupKFold(5), coordinate groups, no hyperparameter search",
+  "sklearn_version": "1.9.0",
+  "numpy_version": "2.3.5",
+  "input_sha256": "3f99da882fc096cfa948d30dab3d736d4ed64596508ba9f490dec582c933c718",
+  "benchmarks": [
+    {
+      "model": "Training mean",
+      "rmse": 9.454632329968232,
+      "mae": 8.0331258197287,
+      "r2": -0.004822157328720156,
+      "fold_rmse": [
+        9.47295937477676,
+        8.311109430911461,
+        9.31712869375404,
+        9.70259785856751,
+        10.35664186165172
+      ]
+    },
+    {
+      "model": "Linear regression",
+      "rmse": 7.932695125441072,
+      "mae": 2.8824850629397343,
+      "r2": 0.2926384639092543,
+      "fold_rmse": [
+        3.120942804512675,
+        3.4214473731418713,
+        16.362724666425056,
+        3.541357572592016,
+        3.5380666205552767
+      ]
+    },
+    {
+      "model": "Decision tree",
+      "rmse": 1.233696384324578,
+      "mae": 0.4421310387002609,
+      "r2": 0.9828913202315934,
+      "fold_rmse": [
+        1.0621827042428456,
+        1.025901760799398,
+        0.7415707214894746,
+        2.0035029171805774,
+        0.9329827797898299
+      ]
+    },
+    {
+      "model": "Random forest",
+      "rmse": 0.8848713463101175,
+      "mae": 0.35047103990677375,
+      "r2": 0.9911984293811599,
+      "fold_rmse": [
+        0.8461227333867212,
+        0.8927107017270202,
+        0.6128151599948289,
+        1.213721722582149,
+        0.7448434647425751
+      ]
+    }
+  ],
+  "profile": {
+    "lux_max": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 469.0,
+      "zeros": 1876
+    },
+    "lux_avg": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 467.0,
+      "zeros": 1911
+    },
+    "lux_min": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 465.0,
+      "zeros": 1946
+    },
+    "noise_max": {
+      "min": 35.0,
+      "median": 47.0,
+      "max": 75.0,
+      "zeros": 0
+    },
+    "noise_avg": {
+      "min": 35.0,
+      "median": 43.0,
+      "max": 74.0,
+      "zeros": 0
+    },
+    "noise_min": {
+      "min": 35.0,
+      "median": 41.0,
+      "max": 74.0,
+      "zeros": 0
+    },
+    "noise_range_proxy": {
+      "min": 0.0,
+      "median": 1.25,
+      "max": 5.25,
+      "zeros": 107
+    },
+    "cctv": {
+      "min": 0.0,
+      "median": 3.0,
+      "max": 15.0,
+      "zeros": 408
+    },
+    "light": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 2.0,
+      "zeros": 3200
+    },
+    "security": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 221.0,
+      "zeros": 1731
+    }
+  }
+}

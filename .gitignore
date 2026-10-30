@@ -1,0 +1,12 @@
+__pycache__/
+.pytest_cache/
+.venv/
+.env
+.env.*
+.DS_Store
+*.log
+data/raw/
+archive/sources/
+archive/deep-audit/
+models/*.joblib
+work/

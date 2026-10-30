@@ -1,0 +1,10 @@
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[project]
+name = "safenight"
+version = "0.1.0"
+description = "Nighttime environment index and coordinate-held-out prediction experiments"
+requires-python = ">=3.12"
+dependencies = ["numpy==2.3.5", "scikit-learn==1.9.0", "joblib"]

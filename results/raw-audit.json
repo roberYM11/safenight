@@ -1,0 +1,57 @@
+{
+  "raw_rows": 165476,
+  "header_width": 58,
+  "row_width_counts": {
+    "64": 165476
+  },
+  "nonempty_extra_fields": 0,
+  "selected_reconstructed": 3713,
+  "lineage_error_rows": 0,
+  "six_shift_feature_error_rows": 0,
+  "location_serial_count": 1159,
+  "location_duplicate_serials": 0,
+  "corrected_complete_rows": 3619,
+  "raw_sensor_time_duplicate_excess": 391,
+  "corrected_ranges": {
+    "lux_max": {
+      "min": 0.0,
+      "max": 469.0,
+      "median": 0.0,
+      "unique": 144
+    },
+    "lux_avg": {
+      "min": 0.0,
+      "max": 467.0,
+      "median": 0.0,
+      "unique": 149
+    },
+    "lux_min": {
+      "min": 0.0,
+      "max": 465.0,
+      "median": 0.0,
+      "unique": 150
+    },
+    "noise_max": {
+      "min": 35.0,
+      "max": 75.0,
+      "median": 47.0,
+      "unique": 41
+    },
+    "noise_avg": {
+      "min": 35.0,
+      "max": 74.0,
+      "median": 44.0,
+      "unique": 38
+    },
+    "noise_min": {
+      "min": 35.0,
+      "max": 74.0,
+      "median": 41.0,
+      "unique": 36
+    }
+  },
+  "field_mapping": {
+    "stored_lux": "raw_noise",
+    "stored_noise_before_x1000": "raw_vibration_y"
+  }
+}

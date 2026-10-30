@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="SafeNight 밤길 안전도 지도">
+  <meta name="theme-color" content="#101a20">
+  <title>SafeNight — 밤길 안전도 지도</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./vendor/leaflet.css">
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="./vendor/leaflet.js"></script>
+  <script defer src="./data/observations.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#explore">지도로 바로가기</a>
+  <header class="header wrap">
+    <a class="brand" href="./" aria-label="SafeNight 홈"><svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M22 18a10 10 0 0 1-12-12A10 10 0 1 0 22 18Z" fill="currentColor"/><circle cx="20" cy="7" r="2" fill="currentColor"/></svg>SafeNight<span>밤길 안전도 지도</span></a>
+    <span class="header-date">2025. 10. 12. 관측</span>
+  </header>
+  <main class="wrap">
+    <section id="explore" aria-label="관측 지점 탐색">
+      <div class="toolbar">
+        <div><label for="hour">관측 시간</label><select id="hour"><option value="00">00:07</option><option value="01">01:07</option><option value="02">02:07</option><option value="22">22:07</option><option value="23" selected>23:07</option></select></div>
+        <div class="search"><label for="search">센서 찾기</label><input id="search" type="search" placeholder="센서 ID 또는 좌표로 검색" autocomplete="off"></div>
+        <div class="point-select"><label for="point">관측 지점 선택</label><select id="point" aria-label="관측 지점 선택"></select></div>
+        <button id="overview" class="secondary">서울 전체 보기</button>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite">관측 데이터를 준비하고 있습니다.</p>
+      <div class="explorer">
+        <div class="map-wrap"><div id="map" aria-label="서울 관측 지점 지도"></div><div class="map-caption"><span>예측 지수</span><i class="legend low"></i><span>75 미만</span><i class="legend middle"></i><span>75–90</span><i class="legend high"></i><span>90 이상</span></div><p class="tile-status" id="tile-status" hidden>배경지도 연결을 확인해 주세요. 관측 좌표와 지점 선택은 계속 사용할 수 있습니다.</p></div>
+        <aside class="detail" aria-label="선택 지점의 환경과 예측" aria-live="polite">
+          <div class="detail-head"><span>선택한 관측</span><strong id="sensor">—</strong><small id="timestamp">—</small></div>
+          <div class="score"><span>예측 안전도 지수</span><div><strong id="prediction">—</strong><span>/ 100</span></div></div>
+          <div class="rule"><span>규칙으로 계산한 지수</span><strong id="target">—</strong></div>
+          <h2>그 시간의 환경</h2><dl class="metrics"><div><dt>평균 밝기</dt><dd id="lux">—</dd></div><div><dt>평균 소음</dt><dd id="noise">—</dd></div></dl>
+          <h2>반경 25m 시설 좌표</h2><dl class="facilities"><div><dt>CCTV</dt><dd id="cctv">—</dd></div><div><dt>가로등</dt><dd id="light">—</dd></div><div><dt>보안등</dt><dd id="security">—</dd></div></dl>
+          <button id="focus" class="primary">선택 지점으로 이동</button>
+          <small class="coordinates" id="coordinates">—</small>
+        </aside>
+      </div>
+      <section class="history"><div><h2>같은 장소, 다른 시간</h2></div><div id="history" class="history-values"></div></section>
+    </section>
+  </main>
+  <noscript>지점 선택과 지도 탐색을 위해 JavaScript를 켜 주세요.</noscript>
+</body>
+</html>

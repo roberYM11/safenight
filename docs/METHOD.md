@@ -1,0 +1,42 @@
+# 수식과 실험 조건
+
+원본 프로젝트의 산출식을 복원된 입력에 적용했다. 실제 범죄·사고 라벨 없이 입력에서 만든 지수를 학습하는 규칙 재현 실험이다. 정확한 계산은 `src/scoring.py`, 고정 조건의 비교는 `src/train.py`가 담당한다.
+
+L=평균조도, n=평균소음, v=(소음최대-소음최소)/4.
+
+```text
+I = clip(100 - L/3, 0, 100)
+N = clip(100 - 2.5n, 0, 100)                 if n < 40
+    (n - 40) × 20/30                       if 40 ≤ n ≤ 70
+    min(100, 20 + (n - 70) × 80/40)         if n > 70
+T = 50                                     if n = 0
+    clip(50 - 100v/(n+0.00001), 0, 100)     otherwise
+C = min(100, CCTV좌표행수 × 25)
+G = min(100, 가로등좌표행수 × 20)
+B = min(100, 보안등좌표행수 × 30)
+S = clip(100 - .30I - .15N - .10T + .25C + .15G + .05B, 0, 100)
+```
+
+비음수 입력에서 T≤50이므로 환경 부담 최대는 50이며 최종 지수는 50~100에 놓인다. v는 실제 시계열 표준편차와 구분한다. dB 범위를 평균 dB로 나눈 값의 물리적 의미와 사람 활동성의 관계는 검증 대상으로 남긴다.
+
+시설 0은 제공된 좌표 자료의 반경 집계 0이다. 실제 시설 부재와는 제공 범위·좌표 중복·시야·운영 상태가 다를 수 있다. 원본 반경25m와 원본 시설 집계를 비교의 고정 조건으로 유지했다.
+
+## 현재 모델 비교
+
+3,230행, 652개 좌표, 10개 수치 변수. GroupKFold(n_splits=5), 기본 shuffle=False, 좌표 문자열을 그룹으로 고정. 같은 좌표의 모든 시각은 같은 평가 폴드다. 각 폴드의 학습과 평가 좌표 교집합이 비었는지 검사한다. 공간 버퍼·시간 외삽 검증은 추가하지 않았다. 원본 파라미터를 이미 선택한 과정과 이번 고정 폴드 진단을 구분한다.
+
+학습 평균값, LinearRegression 기본값, DecisionTreeRegressor(depth18,seed42), RandomForestRegressor(114trees,depth18,minsplit2,minleaf1,max_features=None,bootstrap=True,seed42,n_jobs1)를 비교했다. 원본 목표식은 그대로 재계산한다. OOF 총 RMSE는 모든 평가 예측의 제곱오차를 모아 계산하며 폴드 RMSE 단순 평균과 구분한다.
+
+Random Forest는 표 형식의 비선형 변수 관계와 서로 다른 단위를 다루는 후보로 합리적이다. 이번 실험의 가장 작은 오차는 선택 근거를 보완하지만 일반적인 우월성을 뜻하는 통계 검정은 수행하지 않았다. 선형 회귀는 특정 폴드 오차가 커서 총 RMSE와 MAE를 함께 제시했다. 반복적 파생변수와 최대·평균·최소의 상관도 고려해야 한다. 변수 중요도를 실제 안전의 원인으로 해석하는 실험은 수행하지 않았다.
+
+규칙을 직접 계산하면 현재 목표에 대한 오차는 0이다. 회귀 모델은 이 규칙에 대한 대체 추정 실험이며 현재 수식보다 더 좋은 안전 정답을 만드는 역할을 평가한 것은 아니다. 독립적 안전 관측을 수집하면 현재 입력 구성과 좌표 분리 구조를 새로운 목표 검증에 재사용할 수 있다.
+
+## 화면
+
+마커 색은 예측값 75미만,75~90미만,90이상의 표시 구간이다. 점수 계산식·학습 목표·검증된 위험 등급은 구분한다. 시각은 원본의 현지시각 문자열을 보존했다. 각 시각은 하루의 5개 스냅샷이며 연속된 하룻밤을 대표하는 기간으로 바꾸지 않았다.
+
+## 참고
+
+- [scikit-learn RandomForestRegressor](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html): bootstrap, 전체 변수 설정, 나무 예측 평균
+- [GroupKFold](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GroupKFold.html): 그룹 중복을 방지하는 검증
+- [Leaflet 1.9.4](https://leafletjs.com/reference.html): 지도 라이브러리, 로컬 vendor 포함
