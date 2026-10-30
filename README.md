@@ -73,7 +73,6 @@ SafeNight의 핵심은 시설이 있는지 여부와 그때의 환경을 함께 
 | [docs/](docs/) | 데이터·수식·검증 기록 |
 
 ```bash
-python3 -m http.server 8765 --bind 127.0.0.1 --directory site
 uv run src/train.py
 ```
 
