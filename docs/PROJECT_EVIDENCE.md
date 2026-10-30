@@ -129,4 +129,4 @@ random_state=42, n_jobs=1
 
 ## 코드와 수치 기록
 
-[analysis/README.md](../analysis/README.md)에 입력 파일, 실행 순서와 JSON 결과를 연결했다. 원본 Drive·노트북은 변경하지 않았다. 웹사이트 재제작과 API 연결은 이번 분석·문서 수정의 완료 범위가 아니다.
+입력 파일과 실행 순서는 [README](../README.md), 수치 결과는 [`results/benchmark.json`](../results/benchmark.json)에서 확인할 수 있다. 이 문서는 점검 당시의 진단 기록이며, 현재 사이트의 실행 코드와 현재 위치 추정 방식은 `src/`와 `site/`에 정리되어 있다.
