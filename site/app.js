@@ -98,6 +98,7 @@
       text('status', `${state.hour}:07 · ${state.filtered.length.toLocaleString()}개 지점 · 지도 원 또는 지점 선택창으로 관측을 선택하세요.`);
     } else {
       state.selected = null;
+      state.estimate = null;
       ['sensor','timestamp','prediction','target','lux','noise','cctv','light','security','coordinates','distance-note'].forEach((id) => text(id, '—'));
       byId('history').replaceChildren();
       text('status', '검색 결과가 없습니다. 검색어를 지우거나 다른 시간을 선택해 주세요.');
@@ -106,7 +107,13 @@
   byId('hour').addEventListener('change', update);
   byId('search').addEventListener('input', update);
   byId('point').addEventListener('change', () => { const row = state.filtered.find((r) => r.id === byId('point').value); if (row) select(row, true); });
-  byId('focus').addEventListener('click', () => { if (state.selected) select(state.selected, true); });
+  byId('focus').addEventListener('click', () => {
+    if (state.estimate && state.userLocation) {
+      map.setView([state.userLocation.lat, state.userLocation.lon], 15, { animate: false });
+    } else if (state.selected) {
+      select(state.selected, true);
+    }
+  });
   byId('overview').addEventListener('click', () => map.fitBounds(rows.map((r) => [r.lat,r.lon]), { padding: [24,24], animate: false }));
   byId('locate').addEventListener('click', () => {
     if (!navigator.geolocation) { text('status', '이 브라우저에서는 위치 기능을 사용할 수 없습니다.'); return; }
