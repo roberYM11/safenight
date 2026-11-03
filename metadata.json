@@ -1,0 +1,8 @@
+{
+  "name": "Remix SafeNight",
+  "description": "A night safety route guidance web application focusing on safe paths over fast ones.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}
