@@ -1,7 +1,7 @@
 {
   "format": "safenight-context-mirror-v1",
-  "collected_at": "2026-11-04T17:55:52.447Z",
-  "workflow_run_id": "41881753453",
+  "collected_at": "2026-11-04T23:39:50.220Z",
+  "workflow_run_id": "41935424185",
   "sources": [
     {
       "id": "songpa-lights",
@@ -20,11 +20,11 @@
           "role": "download_receipt",
           "official_url": "https://www.data.go.kr/tcs/dss/selectFileDataDownload.do",
           "representation": "raw",
-          "original_sha256": "48d569820c37f1c10edfd911153bfff2e0570ef4fa830de98146ab31819b2a18",
-          "sha256": "48d569820c37f1c10edfd911153bfff2e0570ef4fa830de98146ab31819b2a18",
+          "original_sha256": "f038eb87deb85b6769a900698eb4295931c4651da105bbb8b90fe1895ec0a51a",
+          "sha256": "f038eb87deb85b6769a900698eb4295931c4651da105bbb8b90fe1895ec0a51a",
           "size_bytes": 10436,
           "content_type": "text/html;charset=UTF-8",
-          "path": "objects/48d569820c37f1c10edfd911153bfff2e0570ef4fa830de98146ab31819b2a18.bin"
+          "path": "objects/f038eb87deb85b6769a900698eb4295931c4651da105bbb8b90fe1895ec0a51a.bin"
         },
         {
           "role": "csv",
@@ -55,11 +55,11 @@
           "role": "download_receipt",
           "official_url": "https://www.data.go.kr/tcs/dss/selectFileDataDownload.do",
           "representation": "raw",
-          "original_sha256": "3e3204b6d5ecc9c156c600e34a2bc1993466594d6299dcbac3e23d094f82d9a1",
-          "sha256": "3e3204b6d5ecc9c156c600e34a2bc1993466594d6299dcbac3e23d094f82d9a1",
+          "original_sha256": "ec9b14f00b8749e9bfdf0640711730c029a5490c8fdc4172c1d0a733b25593ab",
+          "sha256": "ec9b14f00b8749e9bfdf0640711730c029a5490c8fdc4172c1d0a733b25593ab",
           "size_bytes": 10975,
           "content_type": "text/html;charset=UTF-8",
-          "path": "objects/3e3204b6d5ecc9c156c600e34a2bc1993466594d6299dcbac3e23d094f82d9a1.bin"
+          "path": "objects/ec9b14f00b8749e9bfdf0640711730c029a5490c8fdc4172c1d0a733b25593ab.bin"
         },
         {
           "role": "csv",
@@ -90,7 +90,7 @@
           "role": "download_page",
           "official_url": "https://file.localdata.go.kr/file/cctv_info/info",
           "representation": "extracted_download_page",
-          "original_sha256": "3b849234be22e2b7c58c72c36323e43a5a6687fb6a9c6119a7da20a077814371",
+          "original_sha256": "b35d6cc73c7e6f25166508b20aba92e966106d04431e1d09eb0333cb44be579c",
           "sha256": "f91c8d49af4a405226665db7e051408586ed69cbe06ebb31c2489f9c6a7866e7",
           "size_bytes": 135,
           "content_type": "text/html; charset=utf-8",
@@ -125,7 +125,7 @@
           "role": "download_page",
           "official_url": "https://file.localdata.go.kr/file/cctv_info/info",
           "representation": "extracted_download_page",
-          "original_sha256": "09b51335397500a44a8d2c8254523053f69bef2bcd46837ee3515a618c811f30",
+          "original_sha256": "7b2f604aacf754f2a557fc2ea3e6d60138f3bef0099f58e1e21e3cf7c49ebf54",
           "sha256": "d0b15b4ec607114fe606d707159b2b411e4471cb42e809672129e059c3a3e26c",
           "size_bytes": 135,
           "content_type": "text/html; charset=utf-8",
