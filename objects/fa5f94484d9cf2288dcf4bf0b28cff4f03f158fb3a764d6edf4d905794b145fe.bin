@@ -1,0 +1,2 @@
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Dataset","name":"서울특별시 서초구_보안등 현황","alternateName":"서울특별시 서초구_보안등 현황_20240513","dateModified":"2026-02-03","license":{"name":"이용허락범위 제한 없음","url":"https://www.data.go.kr/ugs/selectPortalPolicyView.do"},"url":"https://www.data.go.kr/data/15128039/fileData.do"}</script>
+<button onclick="fn_fileDataDown('15128039','uddi:43b51fd6-064f-460e-869b-93c62575d285','','1')">공개자료 내려받기</button>

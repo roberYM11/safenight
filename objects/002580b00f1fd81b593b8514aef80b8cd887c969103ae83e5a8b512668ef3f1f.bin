@@ -1,0 +1,2 @@
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Dataset","name":"서울특별시 송파구_조명 시설","alternateName":"서울특별시 송파구_조명 시설_20211122","dateModified":"2026-10-25","license":{"name":"이용허락범위 제한 없음","url":"https://www.data.go.kr/ugs/selectPortalPolicyView.do"},"url":"https://www.data.go.kr/data/15097746/fileData.do"}</script>
+<button onclick="fn_fileDataDown('15097746','uddi:3a663d6d-0bce-4851-9ca3-ef475dc49caf','','1')">공개자료 내려받기</button>
