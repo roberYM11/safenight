@@ -6,7 +6,7 @@ import { resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 
-const ORIGIN = 'https://safenight-seoul-2026.true-tang-8939.chatgpt.site';
+export const ORIGIN = 'https://safenight-seoul-2026.true-tang-8939.chatgpt.site';
 const COLLECTION = '/api/internal/collection';
 const digest = z.string().regex(/^[a-f0-9]{64}$/);
 const activeSource = z.enum(['sdot', 'sensor_locations']);

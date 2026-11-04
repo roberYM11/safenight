@@ -1,0 +1,52 @@
+name: Train a frozen model candidate
+on:
+  schedule:
+    - cron: '30 19 * * 0'
+  workflow_dispatch:
+    inputs:
+      promote:
+        description: 'Approve and activate only if all quality gates pass'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: safenight-model-training
+  cancel-in-progress: false
+jobs:
+  train:
+    if: vars.SAFENIGHT_PIPELINE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SAFENIGHT_COLLECT_AUTH_TOKEN: ${{ secrets.SAFENIGHT_COLLECT_AUTH_TOKEN }}
+      SAFENIGHT_SITE_BYPASS_TOKEN: ${{ secrets.SAFENIGHT_SITE_BYPASS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          cache: npm
+          cache-dependency-path: cloud/package-lock.json
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.28'
+          python-version: '3.12'
+      - name: Require the protected writer credential
+        run: test -n "$SAFENIGHT_COLLECT_AUTH_TOKEN"
+      - run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+        working-directory: cloud
+      - run: uv sync --locked
+        working-directory: backend
+      - name: Materialize pending inputs before freezing the training set
+        run: node cloud/scripts/pipeline-client.mjs derive
+      - name: Train a candidate or report that labels are unavailable
+        env:
+          PROMOTE: ${{ github.event_name == 'workflow_dispatch' && inputs.promote == true }}
+        run: |
+          if [ "$PROMOTE" = 'true' ]; then
+            node cloud/scripts/train-pipeline.mjs --promote
+            node cloud/scripts/pipeline-client.mjs derive
+          else
+            node cloud/scripts/train-pipeline.mjs
+          fi

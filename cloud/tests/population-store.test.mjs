@@ -165,3 +165,16 @@ test('normalizes equivalent timestamp offsets before constructing immutable iden
   // Then: it does not manufacture a second logical source time.
   assert.equal(await count(db, 'population_observations'), 1);
 }));
+
+test('limits a shared area across independent consumers and retains failure backoff after release', () => usingStore(async (store, db, bucket) => {
+  // Given: separate instances share only D1 and R2.
+  const other = new CloudPopulationStore(db, bucket);
+  // When: both try to own the same provider request window.
+  const tokens = await Promise.all([store.acquire(code, now), other.acquire(code, now)]);
+  // Then: one request is allowed; finishing it doesn't bypass the ten-minute rate limit.
+  assert.equal(tokens.filter(Boolean).length, 1);
+  const token = tokens.find(Boolean);
+  await store.release(code, token, now);
+  assert.equal(await other.acquire(code, new Date(now.getTime() + 31000)), null);
+  assert.equal(typeof await other.acquire(code, new Date(now.getTime() + 600000)), 'string');
+}));

@@ -38,6 +38,21 @@ export class CloudPopulationStore {
   readonly bucket: R2Bucket;
   constructor(db: D1Database, bucket: R2Bucket) { this.db = db; this.bucket = bucket; }
 
+  /** One area request per ten-minute window across isolates, including provider failures. */
+  async acquire(code: string, now: Date): Promise<string | null> {
+    areaCode.parse(code);
+    const token = crypto.randomUUID(); const stamp = now.toISOString();
+    const result = await this.db.prepare(`INSERT INTO population_request_leases(area_code,token,lease_until,next_allowed_at) VALUES(?,?,?,?)
+      ON CONFLICT(area_code) DO UPDATE SET token=excluded.token,lease_until=excluded.lease_until,next_allowed_at=excluded.next_allowed_at
+      WHERE population_request_leases.lease_until<=? AND population_request_leases.next_allowed_at<=?`)
+      .bind(code, token, new Date(now.getTime() + 30000).toISOString(), new Date(now.getTime() + CACHE_MILLISECONDS).toISOString(), stamp, stamp).run();
+    return result.meta.changes === 1 ? token : null;
+  }
+
+  async release(code: string, token: string, now: Date): Promise<void> {
+    await this.db.prepare('UPDATE population_request_leases SET lease_until=? WHERE area_code=? AND token=?').bind(now.toISOString(), code, token).run();
+  }
+
   /** Preserve exact source bytes before parsing, including malformed and rejected responses. */
   async archive(input: PopulationRawRequest): Promise<{ readonly raw_sha256: string; readonly retrieved_at: string }> {
     const parsed = rawRequestSchema.safeParse({ area_code: input.area_code, http_status: input.http_status, retrieved_at: input.retrieved_at });

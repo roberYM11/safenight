@@ -1,0 +1,33 @@
+name: Collect S-DoT and materialize predictions
+on:
+  schedule:
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: safenight-sdot-pipeline
+  cancel-in-progress: false
+jobs:
+  collect:
+    if: vars.SAFENIGHT_PIPELINE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    env:
+      SAFENIGHT_COLLECT_AUTH_TOKEN: ${{ secrets.SAFENIGHT_COLLECT_AUTH_TOKEN }}
+      SAFENIGHT_SITE_BYPASS_TOKEN: ${{ secrets.SAFENIGHT_SITE_BYPASS_TOKEN }}
+    defaults:
+      run:
+        working-directory: cloud
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          cache: npm
+          cache-dependency-path: cloud/package-lock.json
+      - name: Require the protected writer credential
+        run: test -n "$SAFENIGHT_COLLECT_AUTH_TOKEN"
+      - run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+      - name: Collect complete Korean days, then consume the durable outbox
+        run: node scripts/pipeline-client.mjs collect

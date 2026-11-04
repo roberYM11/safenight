@@ -10,8 +10,8 @@ const selectedSchema=z.object({
 });
 const measured=z.object({lux:z.number().finite().nonnegative().nullable(),noise_db:z.number().finite().min(0).max(200).nullable(),AUTONOMOUS_DISTRICT:z.string().nullish(),ADMINISTRATIVE_DISTRICT:z.string().nullish()});
 const located=z.object({district:z.string().nullish(),neighborhood:z.string().nullish()});
-const latest=`WITH selected AS (
- SELECT r.* FROM latest_observations c JOIN observation_revisions r ON r.id=c.revision_id WHERE c.source='sdot'
+const latest=(single:boolean)=>`WITH selected AS (
+ SELECT r.* FROM latest_observations c JOIN observation_revisions r ON r.id=c.revision_id WHERE c.source='sdot'${single ? ' AND c.entity_id=?' : ''}
 )
  SELECT s.entity_id,s.observed_at,s.id AS revision_id,s.payload_json,p.id AS location_id,p.lat,p.lon,p.payload_json AS location_payload
  FROM selected s LEFT JOIN observation_revisions p ON p.id=(
@@ -19,8 +19,36 @@ const latest=`WITH selected AS (
  ) ORDER BY s.entity_id`;
 
 /** Resolve only published revisions and the location effective at observation time. */
-export async function readSensors(db:D1Database):Promise<{readonly sensors:readonly CloudSensor[];readonly total_sensors:number;readonly unlocated_sensors:number}> {
-  const rows=z.array(selectedSchema).parse((await db.prepare(latest).all()).results);
+export async function readSensors(db:D1Database,sensorId?:string):Promise<{readonly sensors:readonly CloudSensor[];readonly total_sensors:number;readonly unlocated_sensors:number}> {
+  const statement=db.prepare(latest(sensorId!==undefined));
+  return readSensorRows(sensorId===undefined ? statement : statement.bind(sensorId));
+}
+
+/** A correction is visible only after its publication batch, never at ingestion.
+ * Legacy rows without publication history are deliberately excluded.
+ */
+export async function readSensorsAt(db:D1Database,cutoff:Date):Promise<{readonly sensors:readonly CloudSensor[];readonly total_sensors:number;readonly unlocated_sensors:number}> {
+  const historical=`WITH history AS (
+    SELECT s.*,ROW_NUMBER() OVER(PARTITION BY s.source,s.entity_id,s.observed_at ORDER BY p.sequence DESC) AS chosen
+    FROM observation_selections s JOIN observation_publications p ON p.sequence=s.publication_sequence
+    WHERE p.available_at<=?
+  ), visible AS (SELECT * FROM history WHERE chosen=1), selected AS (
+    SELECT r.* FROM visible v JOIN observation_revisions r ON r.id=v.revision_id
+    WHERE v.source='sdot' AND v.observed_at<=? AND v.observed_at=(
+      SELECT MAX(q.observed_at) FROM visible q WHERE q.source=v.source AND q.entity_id=v.entity_id AND q.observed_at<=?
+    )
+  )
+  SELECT s.entity_id,s.observed_at,s.id AS revision_id,s.payload_json,p.id AS location_id,p.lat,p.lon,p.payload_json AS location_payload
+  FROM selected s LEFT JOIN observation_revisions p ON p.id=(
+    SELECT l.revision_id FROM visible l WHERE l.source='sensor_locations' AND l.entity_id=s.entity_id
+    AND l.observed_at<=s.observed_at ORDER BY l.observed_at DESC LIMIT 1
+  ) ORDER BY s.entity_id`;
+  const stamp=cutoff.toISOString();
+  return readSensorRows(db.prepare(historical).bind(stamp,stamp,stamp));
+}
+
+async function readSensorRows(statement:D1PreparedStatement):Promise<{readonly sensors:readonly CloudSensor[];readonly total_sensors:number;readonly unlocated_sensors:number}> {
+  const rows=z.array(selectedSchema).parse((await statement.all()).results);
   const output=await Promise.all(rows.map(async row=>{
     if (row.lat===null || row.lon===null || row.location_id===null || row.location_payload===null) return null;
     const data=measured.parse(JSON.parse(row.payload_json));

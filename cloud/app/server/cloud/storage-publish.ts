@@ -40,6 +40,22 @@ export async function publishJob(db:D1Database,id:string,token:string,now:Date):
   const conflict=await db.prepare(conflicts).bind(id).first<{value:number}>();
   if (conflict && conflict.value>0) throw new CloudStoreError('revision_conflict');
   const statements:D1PreparedStatement[]=[leaseGuard(db,job,token,now),db.prepare(winners).bind(id),db.prepare(latest).bind(id)];
+  // History and the outbox commit with the pointers, including when the worker
+  // exits immediately after this batch. Retrying a successful job creates neither twice.
+  statements.push(
+    db.prepare('INSERT INTO observation_publications(job_id,available_at) VALUES(?,?)').bind(id,now.toISOString()),
+    db.prepare(`WITH touched AS (
+      SELECT DISTINCT r.source,r.entity_id,r.observed_at FROM job_revisions j
+      JOIN observation_revisions r ON r.id=j.revision_id WHERE j.job_id=?
+    ) INSERT INTO observation_selections(publication_sequence,source,entity_id,observed_at,revision_id)
+      SELECT p.sequence,c.source,c.entity_id,c.observed_at,c.revision_id
+      FROM touched t JOIN current_observations c
+      ON c.source=t.source AND c.entity_id=t.entity_id AND c.observed_at=t.observed_at
+      JOIN observation_publications p ON p.job_id=?`).bind(id,id),
+    db.prepare(`INSERT INTO derivation_jobs(id,kind,input_version,publication_sequence,created_at,updated_at)
+      SELECT ?,'features',?,sequence,?,? FROM observation_publications WHERE job_id=?`)
+      .bind(`derive:${id}`,`publication:${id}`,now.toISOString(),now.toISOString(),id),
+  );
   if (job.source==='sdot') statements.push(db.prepare(`INSERT INTO source_checkpoints(source,covered_until) VALUES(?,?) ON CONFLICT(source) DO UPDATE SET covered_until=MAX(covered_until,excluded.covered_until)`).bind(job.source,window.end));
   statements.push(db.prepare(`UPDATE collection_jobs SET status='succeeded',finished_at=?,updated_at=?,lease_token=NULL,lease_until=NULL,error_code=NULL WHERE id=?`).bind(now.toISOString(),now.toISOString(),id),clearGuard(db,`lease:${id}`));
   await guardedBatch(db,statements);

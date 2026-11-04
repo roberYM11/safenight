@@ -243,3 +243,13 @@ test('fails repeated source pages through real D1 without exposing the staged da
   // Then: storage's concrete typed error becomes a safe failed job, not complete coverage.
   assert.equal(result.status,'failed');assert.equal(result.error_code,'repeated_page');assert.equal((await store.overview()).counts.current_observations,0);
 }));
+
+test('records system visibility after the provider response instead of at request start',()=>usingRealStore(async(store,db)=>{
+  // Given: the source request finishes one second after collection starts.
+  const job=await store.start({source:'sdot',day:'2026-11-03',kind:'collect'},now);
+  const published=new Date(now.getTime()+1000);
+  // When: the real coordinator commits its final page with the current publication clock.
+  await step(store,job.id,{sdot:'fixture-key'},now,async()=>({body:bytes(['sensor-1'],1),content_type:'application/json'}),()=>published);
+  // Then: available_at cannot incorrectly expose data at the earlier request-start cutoff.
+  assert.equal((await db.prepare('SELECT available_at FROM observation_publications WHERE job_id=?').bind(job.id).first()).available_at,published.toISOString());
+}));

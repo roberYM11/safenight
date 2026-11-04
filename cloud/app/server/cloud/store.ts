@@ -101,6 +101,6 @@ export class CloudStore {
   async release(id:string,token:string,now:Date):Promise<void> {
     await this.db.prepare(`UPDATE collection_jobs SET lease_token=NULL,lease_until=NULL,updated_at=? WHERE id=? AND lease_token=? AND status='running'`).bind(now.toISOString(),id,token).run();
   }
-  async sensors() { return readSensors(this.db); }
+  async sensors(sensorId?:string) { return readSensors(this.db,sensorId); }
   async overview() { return readOverview(this.db); }
 }

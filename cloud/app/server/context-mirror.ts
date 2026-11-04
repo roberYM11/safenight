@@ -76,7 +76,7 @@ async function fetchBytes(path: string, maxBytes: number, fetcher?: typeof globa
   }
 }
 const pinnedSchema = z.object({ sha256: z.string().regex(/^[a-f0-9]{64}$/), object_key: z.string() });
-async function pinnedManifest(store: CloudContextStore, jobId: string, sourceId: ContextSourceId, now: Date, token: string, fetcher?: typeof globalThis.fetch): Promise<MirrorManifest> {
+async function pinnedManifest(store: CloudContextStore, jobId: string, sourceId: ContextSourceId, now: Date, token: string, fetcher?: typeof globalThis.fetch, expectedDigest?: string): Promise<MirrorManifest> {
   const job = await store.get(jobId);
   if (!job) throw new ContextMirrorError('context_mirror_job_missing');
   const validate = (bytes: Uint8Array): MirrorManifest => {
@@ -93,18 +93,20 @@ async function pinnedManifest(store: CloudContextStore, jobId: string, sourceId:
     if (!object || object.size > MAX_MANIFEST_BYTES) throw new ContextMirrorError('context_mirror_pin_missing');
     const bytes = new Uint8Array(await object.arrayBuffer());
     if (await sha256(bytes) !== pinned.sha256) throw new ContextMirrorError('context_mirror_digest_mismatch');
+    if (expectedDigest && pinned.sha256 !== expectedDigest) throw new ContextMirrorError('context_mirror_expected_manifest_mismatch');
     return validate(bytes);
   }
   if (sourceId !== CONTEXT_SOURCE_IDS[0]) throw new ContextMirrorError('context_mirror_pin_missing');
   const bytes = await fetchBytes('manifest.json', MAX_MANIFEST_BYTES, fetcher);
   const digest = await sha256(bytes);
+  if (expectedDigest && digest !== expectedDigest) throw new ContextMirrorError('context_mirror_expected_manifest_mismatch');
   await store.archive(jobId, { source_id: sourceId, role: 'mirror_manifest', url: CONTEXT_MIRROR_BASE + 'manifest.json', bytes, sha256: digest, content_type: 'application/json' }, now, token);
   return validate(bytes);
 }
 const receiptSchema = z.object({ status: z.literal(true), atchFileId: z.string().regex(/^FILE_\d+$/), fileDetailSn: z.string().regex(/^\d+$/), dataSetFileDetailInfo: z.object({ publicDataPk: z.string(), dataNm: z.string() }).optional() });
 
-export async function downloadPinnedContextMirror(store: CloudContextStore, jobId: string, sourceId: ContextSourceId, now: Date, token: string, fetcher?: typeof globalThis.fetch) {
-  const manifest = await pinnedManifest(store, jobId, sourceId, now, token, fetcher);
+export async function downloadPinnedContextMirror(store: CloudContextStore, jobId: string, sourceId: ContextSourceId, now: Date, token: string, fetcher?: typeof globalThis.fetch, expectedDigest?: string) {
+  const manifest = await pinnedManifest(store, jobId, sourceId, now, token, fetcher, expectedDigest);
   const source = manifest.sources.find(source => source.id === sourceId);
   if (!source) throw new ContextMirrorError('context_mirror_source_missing');
   const documents = new Map<MirrorDocument['role'], { document: MirrorDocument; bytes: Uint8Array }>();

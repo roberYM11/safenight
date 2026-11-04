@@ -88,3 +88,12 @@ jobs:
           fi
           git -C "$FACILITY_MIRROR_DIR" commit --message "Refresh public facility mirror (run $GITHUB_RUN_ID)"
           git -C "$FACILITY_MIRROR_DIR" push origin "HEAD:refs/heads/$branch"
+      - name: Apply the published manifest to D1 and verify the serving pointer
+        if: vars.SAFENIGHT_PIPELINE_ENABLED == 'true'
+        working-directory: source/cloud
+        env:
+          SAFENIGHT_COLLECT_AUTH_TOKEN: ${{ secrets.SAFENIGHT_COLLECT_AUTH_TOKEN }}
+          SAFENIGHT_SITE_BYPASS_TOKEN: ${{ secrets.SAFENIGHT_SITE_BYPASS_TOKEN }}
+        run: |
+          test -n "$SAFENIGHT_COLLECT_AUTH_TOKEN"
+          SAFENIGHT_MIRROR_MANIFEST="$FACILITY_MIRROR_DIR/manifest.json" node scripts/pipeline-client.mjs context

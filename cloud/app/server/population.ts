@@ -16,7 +16,7 @@ const CACHE_MS = 10 * 60 * 1000;
 const FRESH_MS = 30 * 60 * 1000;
 const SOURCE = { source: '서울시 실시간 인구데이터', source_url: 'https://data.seoul.go.kr/dataList/OA-21778/A/1/datasetView.do', source_update_minutes: 5, cache_minutes: 10, metric: 'area_present_population_estimate', score_included: false, boundary_source_url: boundaries.source_url, boundary_published_at: boundaries.source_published_at } as const;
 type AreaLabel = Pick<PopulationArea, 'code' | 'name' | 'category'>;
-type PopulationCode = 'source_not_authorized' | 'source_unavailable' | 'invalid_source_payload' | 'source_area_mismatch' | 'population_storage_unavailable';
+type PopulationCode = 'source_not_authorized' | 'source_unavailable' | 'invalid_source_payload' | 'source_area_mismatch' | 'population_storage_unavailable' | 'request_throttled';
 export class PopulationError extends Error {
   readonly code: PopulationCode;
   constructor(code: PopulationCode) { super(code); this.name = 'PopulationError'; this.code = code; }
@@ -31,6 +31,8 @@ export type PopulationResult = typeof SOURCE & {
 export type PopulationObservation = { readonly area: AreaLabel; readonly minimum: number; readonly maximum: number; readonly congestion: string; readonly observed_at: string; readonly fetched_at: string; readonly is_replacement: boolean };
 export type PopulationSnapshot = { readonly record: PopulationObservation; readonly raw_sha256: string; readonly retrieved_at: string; readonly expires_at: string; readonly fresh: boolean };
 export interface PopulationPersistence {
+  acquire?(areaCode: string, now: Date): Promise<string | null>;
+  release?(areaCode: string, token: string, now: Date): Promise<void>;
   read(areaCode: string, now: Date): Promise<PopulationSnapshot | null>;
   archive(input: { readonly area_code: string; readonly raw: Uint8Array; readonly http_status: number; readonly retrieved_at: string }): Promise<{ readonly raw_sha256: string; readonly retrieved_at: string }>;
   write(areaCode: string, record: PopulationObservation, raw: Uint8Array, now: Date): Promise<PopulationSnapshot>;
@@ -171,6 +173,12 @@ export class PopulationService {
   private async load(area: PopulationArea, apiKey: string): Promise<StoredPopulation> {
     let fetched_at = this.now().toISOString();
     if (!apiKey.trim()) return { kind: 'failure', value: { area: areaLabel(area), reason: 'api_key_missing', fetched_at } };
+    const token = this.store?.acquire ? await this.store.acquire(area.code, this.now()) : undefined;
+    if (token === null) {
+      const current = await this.store?.read(area.code, this.now());
+      return current ? { kind: 'observation', value: current.record }
+        : { kind: 'failure', value: { area: areaLabel(area), reason: 'request_throttled', fetched_at } };
+    }
     try {
       const response = await this.request(area, apiKey);
       fetched_at = this.now().toISOString();
@@ -197,7 +205,7 @@ export class PopulationService {
     } catch (error) {
       if (error instanceof PopulationError) return { kind: 'failure', value: { area: areaLabel(area), reason: error.code, fetched_at } };
       throw error;
-    }
+    } finally { if (token) await this.store?.release?.(area.code, token, this.now()); }
   }
 
   private async request(area: PopulationArea, apiKey: string): Promise<{ readonly body: Uint8Array; readonly status: number }> {

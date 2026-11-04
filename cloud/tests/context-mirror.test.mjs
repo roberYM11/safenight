@@ -119,3 +119,15 @@ test('yesterday Korean-calendar collection cannot count as today even when less 
   assert.equal(calls, 1);
   assert.equal((await store.get(job.id)).stage_count, 0);
 }));
+
+test('rejects an unexpected published manifest before pinning or staging any source', () => usingStore(async (store, db) => {
+  // Given: a valid current-day manifest whose hash differs from the workflow's publication.
+  const { manifest } = fixture();
+  const job = await store.start(now); const token = await store.claim(job.id, now);
+  // When: a cached older manifest is returned to the callback.
+  await assert.rejects(downloadPinnedContextMirror(store, job.id, 'songpa-lights', now, token,
+    async () => Response.json(manifest), '0'.repeat(64)), error => error instanceof ContextMirrorError && error.code === 'context_mirror_expected_manifest_mismatch');
+  // Then: it cannot become a pinned source or a new serving snapshot.
+  assert.equal((await store.get(job.id)).stage_count, 0);
+  assert.equal((await db.prepare("SELECT COUNT(*) n FROM context_raw_documents WHERE role='mirror_manifest'").first()).n, 0);
+}));

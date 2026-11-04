@@ -24,7 +24,7 @@ export interface JobStore {
 type PageRequester = (query:ProviderQuery,keys:SourceKeys,signal:AbortSignal)=>Promise<ProviderResponse>;
 
 /** Process one resumable page; a GET/map request never calls this operation. */
-export async function step(store:JobStore,jobId:string,keys:SourceKeys,now=new Date(),request:PageRequester=requestPage):Promise<CollectionJob> {
+export async function step(store:JobStore,jobId:string,keys:SourceKeys,now=new Date(),request:PageRequester=requestPage,clock:()=>Date=()=>now):Promise<CollectionJob> {
   const job = await store.get(jobId);
   if (!job) throw new JobError('job_missing');
   switch (job.status) {
@@ -40,7 +40,7 @@ export async function step(store:JobStore,jobId:string,keys:SourceKeys,now=new D
     // A prior caller may have advanced the durable cursor between get() and claim().
     const claimed = await store.get(jobId);
     if (!claimed) throw new JobError('job_missing');
-    if (claimed.total_count !== null && claimed.fetched_rows === claimed.total_count) return await store.publish(jobId,token,now);
+    if (claimed.total_count !== null && claimed.fetched_rows === claimed.total_count) return await store.publish(jobId,token,clock());
     const query:ProviderQuery = { source:'sdot',day:claimed.day,page_no:claimed.page_no,page_size:claimed.page_size,full_snapshot:false };
     const response = await request(query,keys,AbortSignal.timeout(8000));
     const rawSha = await store.archive('sdot',response.body,now);
@@ -49,7 +49,7 @@ export async function step(store:JobStore,jobId:string,keys:SourceKeys,now=new D
     if (claimed.total_count !== null && claimed.total_count !== page.total_count) return await store.fail(jobId,token,'total_changed',now);
     const records:readonly CloudRecord[] = await Promise.all(page.records.map(row=>cloudRecord('sdot',row,rawSha,now)));
     const staged = await store.stage(jobId,token,{ ...page,records },now);
-    if (staged.fetched_rows === page.total_count) return await store.publish(jobId,token,now);
+    if (staged.fetched_rows === page.total_count) return await store.publish(jobId,token,clock());
     return staged;
   } catch (error) {
     if (error instanceof ProviderError || error instanceof JobError) return await store.fail(jobId,token,error.code,now);

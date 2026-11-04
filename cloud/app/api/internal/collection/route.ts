@@ -49,7 +49,7 @@ export async function POST(request:Request) {
         if(parsed.data.kind==='collect'&&(parsed.data.source!=='sdot'||parsed.data.day>yesterday))return Response.json({error:'completed_sdot_day_required'},{status:400,headers});
         return Response.json(await store.start({source:parsed.data.source,day:parsed.data.day,kind:parsed.data.kind,...(parsed.data.expected_count===undefined?{}:{expected_count:parsed.data.expected_count})},now),{headers});
       }
-      case 'step':return Response.json(await step(store,parsed.data.job_id,keys,now),{headers});
+      case 'step':return Response.json(await step(store,parsed.data.job_id,keys,now,requestPage,()=>new Date()),{headers});
       case 'finalize':return Response.json(await finalizeJob(store,parsed.data.job_id,now),{headers});
       case 'probe': {
         const query={source:'sdot',day:yesterday,page_no:1,page_size:1,full_snapshot:false} as const;

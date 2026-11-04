@@ -14,7 +14,7 @@ const command = z.discriminatedUnion('action', [
   z.object({ action: z.literal('due') }).strict(),
   z.object({ action: z.literal('probe') }).strict(),
   z.object({ action: z.literal('step'), job_id: z.string().min(1).max(100) }).strict(),
-  z.object({ action: z.literal('mirror_step'), job_id: z.string().min(1).max(100) }).strict(),
+  z.object({ action: z.literal('mirror_step'), job_id: z.string().min(1).max(100), expected_manifest_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional() }).strict(),
 ]);
 function store(): CloudContextStore {
   if (!env.DB || !env.BUCKET) throw new BindingUnavailable();
@@ -34,7 +34,8 @@ export async function GET(request: Request): Promise<Response> {
     const jobId = new URL(request.url).searchParams.get('job_id');
     if (jobId) {
       const job = await store().get(jobId);
-      return Response.json(job ?? { error: 'context_job_not_found' }, { status: job ? 200 : 404, headers });
+      const pinned = await store().db.prepare("SELECT sha256 FROM context_raw_documents WHERE job_id=? AND role='mirror_manifest' LIMIT 1").bind(jobId).first<{ sha256: string }>();
+      return Response.json(job ? { ...job, mirror_manifest_sha256: pinned?.sha256 ?? null } : { error: 'context_job_not_found' }, { status: job ? 200 : 404, headers });
     }
     return Response.json({ ...await store().overview(), protocol: {
       writer: '/api/internal/context', actions: ['start', 'due', 'step', 'mirror_step', 'probe'], sources: CONTEXT_SOURCE_IDS,
@@ -72,7 +73,7 @@ export async function POST(request: Request): Promise<Response> {
             invalidateContextCache();
             return Response.json(completed, { headers });
           }
-          const dataset = parsed.data.action === 'mirror_step' ? await downloadPinnedContextMirror(repository, jobId, source, new Date(), token) : await downloadContextSource(source, new Date(), {
+          const dataset = parsed.data.action === 'mirror_step' ? await downloadPinnedContextMirror(repository, jobId, source, new Date(), token, undefined, parsed.data.expected_manifest_sha256) : await downloadContextSource(source, new Date(), {
             archive: document => repository.archive(jobId, document, new Date(), token),
           });
           const staged = await repository.stage(jobId, source, dataset, new Date(), token);

@@ -54,7 +54,7 @@ export class ArtifactError extends Error {
 }
 
 /** Parse data-only artifacts and verify the exact bytes before enabling inference. */
-export async function loadBundle(modelText: string, manifestText: string): Promise<Bundle> {
+export async function loadBundle(modelText: string, manifestText: string, options: { readonly allowGroupOverlap?: boolean } = {}): Promise<Bundle> {
   const bytes = new TextEncoder().encode(modelText);
   if (bytes.length > 32 * 1024 * 1024) throw new ArtifactError("artifact_size_exceeded");
   const metadata = manifestSchema.parse(JSON.parse(manifestText));
@@ -74,7 +74,7 @@ export async function loadBundle(modelText: string, manifestText: string): Promi
   if (JSON.stringify(payload.locations) !== JSON.stringify(metadata.training_locations) || JSON.stringify(payload.bounds) !== JSON.stringify(metadata.bounds)) throw new ArtifactError("manifest_support_mismatch");
   if (payload.trees.length !== metadata.trees || payload.locations.length !== metadata.training_sensors) throw new ArtifactError("manifest_count_mismatch");
   const testing = new Set(metadata.test_groups);
-  if (metadata.train_groups.some(id => testing.has(id))) throw new ArtifactError("validation_group_overlap");
+  if (!options.allowGroupOverlap && metadata.train_groups.some(id => testing.has(id))) throw new ArtifactError("validation_group_overlap");
   return { payload, metadata };
 }
 
