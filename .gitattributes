@@ -1,0 +1,2 @@
+# Preserve the byte digest of public training/source snapshots on every platform.
+*.csv -text whitespace=cr-at-eol

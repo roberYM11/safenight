@@ -1,0 +1,57 @@
+name: Validate SafeNight
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: work/safenight
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: work/safenight/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run build
+
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: safenight
+          POSTGRES_PASSWORD: ci-test-only
+          POSTGRES_DB: safenight_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd 'pg_isready -U safenight -d safenight_test'
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      SAFENIGHT_TEST_DATABASE_URL: postgresql+asyncpg://safenight:ci-test-only@127.0.0.1:5432/safenight_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.28'
+          python-version: '3.12'
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run basedpyright
+      - run: uv run pytest -q

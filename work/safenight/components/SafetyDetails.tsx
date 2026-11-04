@@ -33,4 +33,3 @@ export function SafetySensorList({ sensors, selectedId, onSelect }: ListProps) {
     </li>)}
   </ul>;
 }
-
