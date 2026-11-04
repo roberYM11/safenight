@@ -1,0 +1,10 @@
+.nearby-cctv { margin-bottom: var(--space-4); font-size: var(--type-small); line-height: 1.5; overflow-wrap: anywhere; }
+.nearby-actions { display: flex; align-items: center; gap: var(--space-2); }
+.nearby-cctv .text-button { margin-top: 0; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); }
+.nearby-cctv p { margin-top: var(--space-2); }
+.nearby-cctv a { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); text-decoration: underline; }
+.nearby-list { display: grid; gap: var(--space-3); margin-block: var(--space-3); list-style: none; }
+.nearby-list li { padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.nearby-list .text-button { margin-top: var(--space-2); }
+.nearby-video { margin-block: var(--space-3); }
+.nearby-video video { display: block; width: 100%; max-height: 360px; aspect-ratio: 16 / 9; background: var(--background); border-radius: var(--radius-sm); margin-top: var(--space-2); }
