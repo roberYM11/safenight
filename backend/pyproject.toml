@@ -1,0 +1,64 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "safenight-backend"
+version = "0.1.0"
+description = "Versioned public-data ingestion and pluggable model serving"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.30,<1",
+  "sqlalchemy[asyncio]>=2.0,<3",
+  "asyncpg>=0.29,<1",
+  "psycopg[binary]>=3.2,<4",
+  "pydantic>=2.10,<3",
+  "pydantic-settings>=2.6,<3",
+  "httpx2[http2,brotli,zstd]",
+  "anyio>=4,<5",
+  "orjson>=3,<4",
+  "typer>=0.15,<1",
+  "openpyxl>=3.1,<4",
+  "scikit-learn>=1.7,<2",
+  "numpy>=2,<3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<10",
+    "ruff",
+    "basedpyright",
+    "pgserver==0.1.4",
+    "httpx>=0.28,<1",
+    "scikit-learn-stubs>=0.0.3",
+]
+
+[project.scripts]
+safenight = "safenight_backend.cli:app"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra --strict-config --strict-markers"
+markers = ["integration: requires real PostgreSQL"]
+
+[tool.basedpyright]
+typeCheckingMode = "all"
+pythonVersion = "3.12"
+include = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["COM812", "ISC001", "D203", "D213", "CPY001", "FBT001", "FBT002"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["S101", "PLR2004", "SLF001", "D", "ARG", "INP001"]
+"scripts/*.py" = ["T201", "INP001"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
