@@ -78,7 +78,6 @@ node --test tests/*.test.mjs
 npm run build
 ```
 
-운영 배포에는 Sites의 D1·R2, 비밀 설정, 소스 동기화·패키징 절차가 필요합니다. `npm run build`만으로 운영 저장소가 만들어지지는 않습니다. 로컬 Python 실행은 [백엔드 안내](backend/README.md), 수집 인증·재개·완료 확인은 [클라우드 운영 절차](cloud/public/CLOUD_OPERATIONS.md)를 참고하세요.
 
 현재 RandomForest는 교체 가능한 실험용 구성입니다. 같은 입력·출력 계약을 유지하는 교체와 새 입력 변수를 추가하는 변경을 구분해 [모델 교체 안내](docs/model-replacement.md)에 정리했습니다. 새 버전은 독립 평가와 fixture 확인을 거쳐 배포합니다.
 
