@@ -7,7 +7,7 @@ from pathlib import Path
 import httpx
 import httpx2
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from test_feature_lineage import workbook
 from test_model_runtime import fixture_runtime
 from test_pipeline_api import END, START, Environment, install_wire, sdot_body
@@ -23,10 +23,18 @@ pytestmark = pytest.mark.anyio
 pytest_plugins = ("test_pipeline_api",)
 
 
+@pytest.mark.parametrize("database_timezone", ["UTC", "Asia/Seoul"])
 async def test_map_reads_latest_sensor_revision_and_keeps_api_routes_above_static_site(
-    environment: Environment, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    environment: Environment,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    database_timezone: str,
 ) -> None:
-    # Given: two measurements for one sensor, a location, and built static HTML.
+    # Given: two measurements, a location and built HTML under either PostgreSQL session timezone.
+    monkeypatch.setenv("PGTZ", database_timezone)
+    await environment.engine.dispose()
+    async with environment.engine.connect() as connection:
+        assert await connection.scalar(text("SHOW TIME ZONE")) == database_timezone
     payload = json.loads(sdot_body())
     original = payload["sDoTEnv"]["row"][0]
     newer = original | {
@@ -61,7 +69,7 @@ async def test_map_reads_latest_sensor_revision_and_keeps_api_routes_above_stati
     assert (data["total_sensors"], data["unlocated_sensors"], len(data["sensors"])) == (1, 0, 1)
     sensor = data["sensors"][0]
     assert (sensor["lat"], sensor["lon"], sensor["lux"]) == (37.5, 127.0, 99)
-    assert sensor["observed_at"].startswith("2026-11-03T02:00:00")
+    assert datetime.fromisoformat(sensor["observed_at"]) == datetime(2026, 11, 2, 17, tzinfo=UTC)
     assert sensor["score"] is None
     assert sensor["status"] == "MODEL_UNAVAILABLE"
     assert data["model"]["experimental"] is True
