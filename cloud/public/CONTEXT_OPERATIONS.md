@@ -11,3 +11,9 @@
 5. succeeded 뒤 GET /api/internal/context 로 current.id·checked_at·facility_count와 작업 결과를 다시 확인한다. 이력은 DB에, 원문과 버전별 전체 자료는 R2에 남는다. 원문 해시와 시설 내용이 같으면 기존 버전 ID를 유지하고 확인 시각만 갱신한다. 새 자료를 받았다는 이유로 사이트를 재배포하지 않는다.
 
 매일 04:00 Asia/Seoul에 실행한다. GitHub 예약 실행은 지연될 수 있으므로 03:15가 정확한 완료 시각을 보장하지는 않는다. 정상·변경 없음은 별도 알림 없이 종료하고, 수집 실패·접근 오류·검증 오류·미완료 작업만 알린다. 실행 시간이 부족하면 작업 ID와 진행 단계를 남기고 다음 실행에서 재개한다. 실패하면 기존 정상 자료를 유지한다. 원천의 포털 수정일·자료 기준일·이번 확인 시각은 서로 다른 정보다.
+
+## GitHub 게시 직후 callback (2026-11-05 코드)
+
+새 배포에서는 `SAFENIGHT_PIPELINE_ENABLED=true`일 때 기존 시설 워크플로의 마지막 단계가 `pipeline-client.mjs context`를 실행한다. callback은 게시 파일의 manifest 해시를 각 mirror_step에 전달해 원천 처리 전에 확인하고, 완료 후 다시 current 포인터와 pinned manifest를 확인한다. CDN의 이전 파일, 같은 날 다른 manifest로 완료된 작업, 불완전한 원천은 성공으로 간주하지 않는다.
+
+이 callback만 운영자 토큰을 GitHub Secrets로 사용한다. 앞의 수집 단계는 공개 원천을 계속 별도로 수집한다. 기존 Sites 일정과 병행하면 기존 작업 임대·한국 날짜별 성공 제약으로 작업을 조정하며, 배포·Secrets 설정 전에는 새 callback을 활성화하지 않는다.

@@ -44,7 +44,7 @@
 
 ## 시설 수집 실행 위치와 검증
 
-Sites Worker에서 정부 파일 호스트로 직접 요청하면 시간 초과가 발생해 수집 실행 위치를 분리했습니다. GitHub Actions가 공식 네 원천을 내려받아 검증하고 `roberYM11/safenight`의 `safenight-facility-data` 브랜치에 공개 자료만 게시합니다. Site 운영 토큰과 서울시 API 키는 이 작업에 전달하지 않습니다. 기존 직접 수집 `step` 경로는 남아 있지만 현재 운영 일정은 미러를 사용하는 `mirror_step`입니다.
+Sites Worker에서 정부 파일 호스트로 직접 요청하면 시간 초과가 발생해 수집 실행 위치를 분리했습니다. GitHub Actions가 공식 네 원천을 내려받아 검증하고 `roberYM11/safenight`의 `safenight-facility-data` 브랜치에 공개 자료만 게시합니다. 이 공개 원천 수집 단계에는 Site 운영 토큰이나 서울시 API 키가 필요하지 않습니다. 새 코드의 선택적 D1 callback은 별도로 Secrets를 사용합니다. 기존 직접 수집 `step` 경로는 남아 있지만 운영 미러 경로는 `mirror_step`입니다.
 
 Sites가 읽는 경로는 `https://raw.githubusercontent.com/roberYM11/safenight/safenight-facility-data/`로 고정되어 있습니다. 한 작업에서 첫 manifest를 R2에 고정하고, 네 단계 모두 같은 manifest를 사용합니다. 문서별 공식 URL·다운로드 연결·SHA-256·크기·형식을 재검증합니다. manifest 수집 시각은 작업일과 같은 한국 날짜여야 하며 36시간 최대 경과·5분 미래 오차 한도도 별도로 검사합니다. 수집 지연이나 실패로 전날 파일만 남으면 당일 성공으로 처리하지 않습니다.
 
@@ -70,3 +70,13 @@ npm run build
 Drizzle migration은 DDL만 담으며 기존 적용본을 고치지 않고 새 migration으로 확장합니다. 운영 배포 전에 추가 테이블을 적용해야 합니다. 원문과 관측 이전은 인증된 운영자 import 경로로 처리합니다. 로컬 D1 미리보기는 Sites starter 지침에 따라 migration을 적용합니다.
 
 2026-11-04 클라우드 시험 179개·타입 검사·Worker 빌드, 원격 cloud·frontend CI가 통과했습니다. [GitHub 시설 수집 실행 41836099458](https://github.com/roberYM11/safenight/actions/runs/41836099458)과 운영 DB 네 단계 반영도 확인했습니다. 기존 Python CI의 DB 드라이버·시간대 의존 시험도 수정해 원격 시험 77개를 통과했습니다. 첫 예약 실행과 장기 운영의 성공은 아직 확인한 결과가 아니며, 자세한 검증 범위는 [backend/VALIDATION.md](../backend/VALIDATION.md)를 따릅니다.
+
+## 공개 후 계산·고정 학습·모델 전환 코드 (2026-11-05)
+
+새 파이프라인은 `0004_pipeline_lineage.sql` 이후 사용합니다. 관측 공개와 후속 작업을 같은 batch로 기록하고, 작업자는 20행씩 피처·예측 결과를 저장합니다. bootstrap 이후 지도·센서 조회는 활성 모델 버전의 결과를 재사용하며, 최신성은 매 요청 다시 검사합니다. 지점 보간에는 실제 예측 ID와 가중치가 남습니다.
+
+`/api/internal/pipeline`은 기존 수집 토큰으로 보호됩니다. 외부 정답 등록 → 해시로 고정한 데이터셋 → Python 학습 → Worker의 센서·시간·격자 평가 → 명시적 승인·generation 전환 경로를 제공합니다. 정답이 없으면 학습을 보류합니다. 기준 모델보다 나쁘거나 검증이 부족한 후보를 승인하지 않습니다. 시설·인구는 현재 모델 입력에 포함하지 않습니다.
+
+GitHub Actions의 S-DoT 정기 실행, 시설 게시 직후 D1 callback, 주간 후보 학습을 추가했습니다. 새 callback 단계에서만 운영 토큰을 GitHub Secrets로 전달하며, 공개 원천 파일 수집에는 서울시 API 키가 필요하지 않습니다. **마이그레이션·사이트 배포·Secrets 설정 후 `SAFENIGHT_PIPELINE_ENABLED=true`를 설정해야 새 일정이 실행됩니다.** 이번 코드 변경을 운영 배포 완료로 해석하면 안 됩니다.
+
+상세 관계·제약·적용 순서·검증 범위는 [DB와 파이프라인 보정 문서](../docs/database-structure.md), [전체 컬럼](../docs/database-columns.csv), [외래키](../docs/database-foreign-keys.csv)에 있습니다.
