@@ -10,7 +10,16 @@
 **/.pytest_cache/
 **/.ruff_cache/
 **/node_modules/
+**/node_modules
 **/dist/
+**/.sites-runtime/
+**/.wrangler/
+**/.vinext/
+**/.next/
+**/*.tsbuildinfo
+**/.dev.vars
+**/.dev.vars.*
+!**/.dev.vars.example
 **/var/
 .DS_Store
 .omo/

@@ -1,0 +1,90 @@
+name: Collect public facility data
+
+on:
+  schedule:
+    - cron: '15 18 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/collect-facilities.yml'
+      - 'scripts/collect-context-mirror.mjs'
+      - 'cloud/app/server/context-refresh.ts'
+      - 'cloud/app/server/context-source-parser.ts'
+      - 'cloud/app/server/context-data.ts'
+      - 'cloud/package-lock.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: safenight-facility-data
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    if: github.repository == 'roberYM11/safenight'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Check out collection source
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: source
+          fetch-depth: 1
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          cache: npm
+          cache-dependency-path: source/cloud/package-lock.json
+      - name: Install collection runtime dependencies only
+        working-directory: source/cloud
+        run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+      - name: Prepare isolated public data branch
+        working-directory: source
+        env:
+          MIRROR_DIR: ${{ runner.temp }}/safenight-facility-mirror
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch='safenight-facility-data'
+          status=0
+          git ls-remote --exit-code origin "refs/heads/$branch" > "$RUNNER_TEMP/safenight-data-ref" || status=$?
+          if [[ "$status" -eq 0 ]]; then
+            git fetch --no-tags --depth=1 origin "refs/heads/$branch:refs/remotes/origin/$branch"
+            git worktree add --detach "$MIRROR_DIR" "refs/remotes/origin/$branch"
+            git -C "$MIRROR_DIR" switch --create "$branch"
+          elif [[ "$status" -eq 2 ]]; then
+            git worktree add --detach --no-checkout "$MIRROR_DIR" HEAD
+            git -C "$MIRROR_DIR" switch --orphan "$branch"
+          else
+            exit "$status"
+          fi
+          printf 'FACILITY_MIRROR_DIR=%s\n' "$MIRROR_DIR" >> "$GITHUB_ENV"
+      - name: Collect and verify public CSV and metadata extracts
+        working-directory: source
+        run: node scripts/collect-context-mirror.mjs --output "$FACILITY_MIRROR_DIR"
+      - name: Independently verify the manifest and object hashes
+        working-directory: source
+        run: node scripts/collect-context-mirror.mjs --output "$FACILITY_MIRROR_DIR" --verify-only
+      - name: Publish data branch without modifying main
+        working-directory: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch='safenight-facility-data'
+          test "$(git -C "$FACILITY_MIRROR_DIR" branch --show-current)" = "$branch"
+          test "$(git branch --show-current)" = 'main'
+          git -C "$FACILITY_MIRROR_DIR" config user.name 'github-actions[bot]'
+          git -C "$FACILITY_MIRROR_DIR" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C "$FACILITY_MIRROR_DIR" config core.autocrlf false
+          git -C "$FACILITY_MIRROR_DIR" add -- manifest.json objects snapshots
+          if git -C "$FACILITY_MIRROR_DIR" diff --cached --quiet; then
+            exit 0
+          fi
+          git -C "$FACILITY_MIRROR_DIR" commit --message "Refresh public facility mirror (run $GITHUB_RUN_ID)"
+          git -C "$FACILITY_MIRROR_DIR" push origin "HEAD:refs/heads/$branch"

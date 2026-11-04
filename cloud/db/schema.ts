@@ -55,3 +55,50 @@ export const sourceCheckpoints = sqliteTable('source_checkpoints', {
 export const operationGuards = sqliteTable('operation_guards', {
   id: text('id').primaryKey(), ok: integer('ok').notNull(),
 }, table => [check('operation_guard_ok', sql`${table.ok} = 1`)]);
+
+export const populationRawObjects = sqliteTable('population_raw_objects', {
+  sha256: text('sha256').primaryKey(), object_key: text('object_key').notNull(),
+  size_bytes: integer('size_bytes').notNull(), first_area_code: text('first_area_code').notNull(),
+  http_status: integer('http_status').notNull(), source_url: text('source_url').notNull(), retrieved_at: text('retrieved_at').notNull(),
+}, table => [check('population_raw_size', sql`${table.size_bytes} BETWEEN 0 AND 1048576`), check('population_raw_http_status', sql`${table.http_status} BETWEEN 100 AND 599`)]);
+
+export const populationObservations = sqliteTable('population_observations', {
+  id: text('id').primaryKey(), area_code: text('area_code').notNull(), observed_at: text('observed_at').notNull(),
+  raw_sha256: text('raw_sha256').notNull().references(() => populationRawObjects.sha256),
+  payload_json: text('payload_json').notNull(), source_url: text('source_url').notNull(), inserted_at: text('inserted_at').notNull(),
+}, table => [
+  uniqueIndex('population_observation_identity').on(table.area_code, table.observed_at, table.raw_sha256),
+  index('population_observation_area_time').on(table.area_code, table.observed_at),
+]);
+
+export const populationCache = sqliteTable('population_cache', {
+  area_code: text('area_code').primaryKey(), observation_id: text('observation_id').notNull().references(() => populationObservations.id),
+  retrieved_at: text('retrieved_at').notNull(), expires_at: text('expires_at').notNull(),
+});
+
+export const contextSnapshots = sqliteTable('context_snapshots', {
+  id: text('id').primaryKey(), object_key: text('object_key').notNull(), artifact_sha256: text('artifact_sha256').notNull(),
+  sources_json: text('sources_json').notNull(), source_count: integer('source_count').notNull(), facility_count: integer('facility_count').notNull(), created_at: text('created_at').notNull(),
+});
+export const contextCurrent = sqliteTable('context_current', {
+  scope: text('scope').primaryKey(), snapshot_id: text('snapshot_id').notNull().references(() => contextSnapshots.id), checked_at: text('checked_at').notNull(),
+});
+export const contextRefreshJobs = sqliteTable('context_refresh_jobs', {
+  id: text('id').primaryKey(), scope: text('scope').notNull(), day: text('day').notNull(), status: text('status').notNull(),
+  next_source_index: integer('next_source_index').notNull(), created_at: text('created_at').notNull(), updated_at: text('updated_at').notNull(), finished_at: text('finished_at'),
+  error_code: text('error_code'), snapshot_id: text('snapshot_id').references(() => contextSnapshots.id), unchanged: integer('unchanged').notNull(),
+  lease_token: text('lease_token'), lease_until: text('lease_until'),
+}, table => [
+  uniqueIndex('context_active_job').on(table.scope).where(sql`${table.status} = 'running'`),
+  uniqueIndex('context_successful_day').on(table.scope, table.day).where(sql`${table.status} = 'succeeded'`),
+  check('context_source_cursor', sql`${table.next_source_index} BETWEEN 0 AND 4`),
+]);
+export const contextRawDocuments = sqliteTable('context_raw_documents', {
+  id: text('id').primaryKey(), job_id: text('job_id').notNull().references(() => contextRefreshJobs.id), source_id: text('source_id').notNull(),
+  role: text('role').notNull(), url: text('url').notNull(), sha256: text('sha256').notNull(), object_key: text('object_key').notNull(),
+  size_bytes: integer('size_bytes').notNull(), content_type: text('content_type').notNull(), retrieved_at: text('retrieved_at').notNull(),
+}, table => [index('context_raw_job_source').on(table.job_id, table.source_id), check('context_raw_size', sql`${table.size_bytes} BETWEEN 0 AND 10485760`)]);
+export const contextStagedSources = sqliteTable('context_staged_sources', {
+  job_id: text('job_id').notNull().references(() => contextRefreshJobs.id), source_id: text('source_id').notNull(), source_index: integer('source_index').notNull(),
+  object_key: text('object_key').notNull(), artifact_sha256: text('artifact_sha256').notNull(), semantic_id: text('semantic_id').notNull(), stored_at: text('stored_at').notNull(),
+}, table => [primaryKey({ columns: [table.job_id, table.source_id] }), uniqueIndex('context_stage_cursor').on(table.job_id, table.source_index)]);

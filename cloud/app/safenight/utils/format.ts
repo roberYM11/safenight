@@ -20,3 +20,7 @@ export function scoreTone(score: number | null): string {
   if (score >= 50) return "mid";
   return "low";
 }
+
+export function formatDistance(value: number): string {
+  return value < 1000 ? `${Math.round(value)}m` : `${(value / 1000).toFixed(1)}km`;
+}

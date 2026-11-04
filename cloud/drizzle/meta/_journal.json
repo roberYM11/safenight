@@ -15,6 +15,20 @@
       "when": 1793789595194,
       "tag": "0001_curved_goblin_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793795014359,
+      "tag": "0002_abandoned_masque",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1793795615472,
+      "tag": "0003_minor_thunderbolt_ross",
+      "breakpoints": true
     }
   ]
 }

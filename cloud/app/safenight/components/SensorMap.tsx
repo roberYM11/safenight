@@ -8,15 +8,19 @@ type Props = {
   readonly sensors: readonly Sensor[];
   readonly selectedId: Sensor["sensor_id"] | null;
   readonly focus: MapFocus | null;
+  readonly target: { readonly name: string; readonly lat: number; readonly lon: number } | null;
+  readonly onPointSelect: (point: { readonly lat: number; readonly lon: number }) => void;
   readonly onSelect: (sensor: Sensor) => void;
   readonly theme: "dark" | "light";
 };
 
-export function SensorMap({ sensors, selectedId, focus, onSelect, theme }: Props) {
+export function SensorMap({ sensors, selectedId, focus, target, onPointSelect, onSelect, theme }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markers = useRef<L.LayerGroup | null>(null);
   const initializedBounds = useRef(false);
+  const pointSelect = useRef(onPointSelect);
+  useEffect(() => { pointSelect.current = onPointSelect; }, [onPointSelect]);
   const [tileError, setTileError] = useState(false);
 
   useEffect(() => {
@@ -30,6 +34,7 @@ export function SensorMap({ sensors, selectedId, focus, onSelect, theme }: Props
     }).addTo(instance);
     tiles.on("tileerror", () => setTileError(true));
     map.current = instance;
+    instance.on("click", (event: L.LeafletMouseEvent) => pointSelect.current({ lat: event.latlng.lat, lon: event.latlng.lng }));
     markers.current = L.layerGroup().addTo(instance);
     const observer = new ResizeObserver(() => instance.invalidateSize());
     observer.observe(container.current);
@@ -56,6 +61,7 @@ export function SensorMap({ sensors, selectedId, focus, onSelect, theme }: Props
         fillOpacity: selected ? 1 : 0.75,
         color: selected ? styles.getPropertyValue("--text").trim() : color,
         weight: selected ? 3 : 1,
+        bubblingMouseEvents: false,
       }).on("click", () => onSelect(sensor)).addTo(group);
     }
     if (!initializedBounds.current && sensors.length > 0) {
@@ -70,6 +76,15 @@ export function SensorMap({ sensors, selectedId, focus, onSelect, theme }: Props
       animate: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     });
   }, [focus]);
+
+  useEffect(() => {
+    if (!target || !map.current) return;
+    const label = document.createElement("span");
+    label.textContent = target.name;
+    const pin = L.marker([target.lat, target.lon], { icon: L.divIcon({ className: "place-pin", html: '<span aria-hidden="true"></span>', iconSize: [28, 28], iconAnchor: [14, 28] }), zIndexOffset: 1000 }).bindTooltip(label, { direction: "top", offset: [0, -26], permanent: true }).addTo(map.current);
+    const radius = L.circle([target.lat, target.lon], { radius: 1500, weight: 1, dashArray: "5 5", color: "#60a5fa", fillOpacity: 0.035, interactive: false }).addTo(map.current);
+    return () => { pin.remove(); radius.remove(); };
+  }, [target]);
 
   return <>
     <div ref={container} className="sensor-map" aria-label="서울시 환경 센서 지도" />
