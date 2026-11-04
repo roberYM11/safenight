@@ -14,7 +14,7 @@ from safenight_backend.models import SourceCheckpoint, SourceRun
 from safenight_backend.runner import CollectionOutcome, CollectionRequest, SourceName, collect
 
 SEOUL: Final = ZoneInfo("Asia/Seoul")
-SOURCES: Final[tuple[SourceName, ...]] = ("sdot", "cctv")
+SOURCES: Final[tuple[SourceName, ...]] = ("sdot",)
 
 
 async def recheck_windows(

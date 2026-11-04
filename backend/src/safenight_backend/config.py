@@ -25,5 +25,3 @@ class Settings(BaseSettings):
     sensor_locations_file: Path = Path("var/sensor_locations.xlsx")
     model_bundle_dir: Path | None = None
     web_dist: Path | None = None
-    video_catalog_file: Path | None = None
-    nearby_provider_enabled: bool = False

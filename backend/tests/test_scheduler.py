@@ -49,7 +49,7 @@ async def test_schedule_runs_at_kst_boundary_and_deduplicates_completed_windows(
     # When: the daemon checks the same scheduled day a second time.
     await schedule.run_due(environment.engine, settings, now)
     # Then: yesterday plus the older correction window ran once per source, without another fit/run.
-    assert first == 4
+    assert first == 2
     assert len(calls) == first
     assert calls[0].start.isoformat() == "2026-11-03T00:00:00+09:00"
     assert calls[0].end.isoformat() == "2026-11-04T00:00:00+09:00"
@@ -76,6 +76,5 @@ async def test_recent_failure_defers_source_without_advancing_its_checkpoint(
     monkeypatch.setattr(schedule, "collect", paused_job)
     # When: the scheduler evaluates due sources.
     await schedule.run_due(environment.engine, environment.settings, now)
-    # Then: the other source can proceed while the failed source observes its retry pause.
-    assert "sdot" not in calls
-    assert "cctv" in calls
+    # Then: the only active source observes its retry pause; retired sources never run.
+    assert calls == []

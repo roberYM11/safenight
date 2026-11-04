@@ -171,7 +171,7 @@ async def test_complete_pages_are_committed_and_read_by_api(
     assert observations.json()[0]["payload"]["noise_db"] == 48
     assert assessment.status_code == 200
     assert assessment.json()["score"] is None
-    assert next(row for row in sources.json() if row["source"] == "cctv")["full_baseline"]
+    assert all(row["source"] != "cctv" for row in sources.json())
 
 
 @pytest.mark.parametrize(

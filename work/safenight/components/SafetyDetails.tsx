@@ -1,7 +1,6 @@
 import { Check, Sun, Volume2 } from "lucide-react";
 import type { Sensor } from "../utils/api";
 import { formatTime, scoreTone, statusText } from "../utils/format";
-import { OnDemandCctv } from "./OnDemandCctv";
 
 export function SafetyObservation({ sensor }: { readonly sensor: Sensor | null }) {
   if (!sensor) return <p className="empty-state">지도나 센서 목록에서 관측 지점을 선택해 주세요.</p>;
@@ -10,7 +9,6 @@ export function SafetyObservation({ sensor }: { readonly sensor: Sensor | null }
       <h2>{sensor.neighborhood || sensor.district || "선택한 관측 지점"}</h2>
       <time dateTime={sensor.observed_at}>관측 {formatTime(sensor.observed_at)} KST</time>
     </div>
-    <OnDemandCctv key={`${sensor.sensor_id}:${sensor.lat}:${sensor.lon}`} sensor={sensor} />
     <dl className="measurement-grid">
       <div><dt><Sun size={22} />조도</dt><dd>{sensor.lux === null ? "미확인" : <>{sensor.lux.toLocaleString("ko-KR")} <small>lux</small></>}</dd></div>
       <div><dt><Volume2 size={22} />소음</dt><dd>{sensor.noise_db === null ? "미확인" : <>{sensor.noise_db.toLocaleString("ko-KR")} <small>dB</small></>}</dd></div>

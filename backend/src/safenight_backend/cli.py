@@ -46,15 +46,15 @@ def migrate() -> None:
 
 @app.command("collect")
 def collect_command(
-    source: Annotated[str, typer.Argument(help="sdot or cctv")],
+    source: Annotated[str, typer.Argument(help="sdot")],
     day: Annotated[str, typer.Option(help="KST day YYYY-MM-DD")],
     full_snapshot: bool = False,
 ) -> None:
     """Collect a complete source window; page limits never publish partial results."""
-    if source not in {"sdot", "cctv"}:
-        message = "source must be sdot or cctv"
+    if source != "sdot":
+        message = "source must be sdot"
         raise typer.BadParameter(message)
-    source_name: SourceName = "sdot" if source == "sdot" else "cctv"
+    source_name: SourceName = "sdot"
     start = datetime.combine(date.fromisoformat(day), time.min, tzinfo=ZoneInfo("Asia/Seoul"))
     settings = Settings()
 

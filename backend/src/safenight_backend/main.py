@@ -11,8 +11,6 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select, text
 from sqlalchemy.exc import SQLAlchemyError
 
-from safenight_backend.camera_contracts import CameraDiscovery, SearchArea
-from safenight_backend.camera_discovery import discover_nearby
 from safenight_backend.config import Settings
 from safenight_backend.db import make_engine, session_factory
 from safenight_backend.features import build_features
@@ -84,7 +82,6 @@ def create_app(  # noqa: C901
         async with factory() as session:
             for source, configured in (
                 ("sdot", bool(settings.sdot_api_key.get_secret_value())),
-                ("cctv", bool(settings.cctv_api_key.get_secret_value())),
                 ("sensor_locations", settings.sensor_locations_file.exists()),
                 ("streetlights", False),
                 ("securitylights", False),
@@ -165,17 +162,6 @@ def create_app(  # noqa: C901
     async def map_view() -> MapResponse:
         async with factory.begin() as session:
             return await read_map(session, runtime)
-
-    @router.get("/cctv/nearby")
-    async def nearby_cctv(
-        lat: Annotated[float, Query(ge=-90, le=90)],
-        lon: Annotated[float, Query(ge=-180, le=180)],
-        radius_m: Annotated[int, Query(ge=50, le=5000)] = 1000,
-    ) -> CameraDiscovery:
-        async with factory() as session:
-            return await discover_nearby(
-                session, SearchArea(lat=lat, lon=lon, radius_m=radius_m), settings
-            )
 
     app.include_router(router)
     app.include_router(router, prefix="/api")
