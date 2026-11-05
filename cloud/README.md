@@ -1,6 +1,6 @@
 # SafeNight - Sites 클라우드 실행본
 
-장소명·주소 검색 → 지도 이동 → 주변 센서의 거리 가중 실험용 환경 안전도와 시설·구역 인구 확인을 처리합니다. 서버·D1·R2·추론은 Sites에서 실행하며 로컬 서버나 Docker가 필요하지 않습니다.
+SafeNight의 지도 서버입니다. Sites에서 장소를 검색하고 D1의 센서 관측을 읽어 점수를 계산합니다. 원본 파일은 R2에 보관합니다.
 
 ## 공개 조회 API
 
@@ -12,11 +12,11 @@
 | `GET /api/assessments/:sensor_id` | 센서 단위 추론 |
 | `GET /api/population?lat=…&lon=…` | 공식 구역의 추정 인구 범위·혼잡도·관측 시각 |
 
-장소 검색은 입력 중 매 글자마다 외부 API를 부르는 자동완성이 아닙니다. 역명은 일반적인 `역` 접미어와 철도역 필터로 처리하고, 실제 원천 좌표를 유지합니다. 같은 검색의 동시 요청을 합치고 24시간의 제한된 메모리 캐시를 사용합니다. 제공자 URL은 `SAFENIGHT_PLACE_SEARCH_URL`로 Photon 호환 서버로 교체할 수 있습니다. [Photon 공개 서버 사용 조건](https://github.com/komoot/photon)은 합리적인 요청량을 전제로 하며 가용성을 보장하지 않습니다. 화면에는 OpenStreetMap 출처를 표시합니다.
+사용자가 검색을 제출하면 Photon에 요청합니다. 역명은 철도역을 먼저 찾고, 같은 검색의 동시 요청은 하나로 합쳐 결과를 최대 24시간 캐시합니다. `SAFENIGHT_PLACE_SEARCH_URL`로 Photon 호환 서버를 지정할 수 있습니다. 지도에는 OpenStreetMap 출처를 표시합니다. [Photon 공개 서버 사용 조건](https://github.com/komoot/photon)
 
 장소 점수는 반경 **1,500m** 안의 유효 센서 중 가까운 **최대 8개**를 사용합니다. 원시 가중치는 `1 / max(25, distance_m)^2`이며, 합이 1이 되도록 정규화해 센서별 점수·조도·소음을 합칩니다. 선택 좌표는 바꾸지 않습니다. 30시간을 넘긴 관측, 결측, 모델 지원 밖의 센서는 제외하고 근거가 없으면 점수는 `null`입니다.
 
-현재 RandomForest 입력은 `lux`, `noise_db` 두 가지입니다. 가로등·보안등·CCTV 설치 기록과 구역 인구는 `score_included:false`인 주변 정보입니다. 자료 누적과 결합 검증 후 별도 모델 후보를 학습하기로 한 단계이며, 추가 입력을 반영한 새 모델이 이미 완성된 상태는 아닙니다. 입력·출력과 기존 Python 일치 경계는 [SERVING.md](SERVING.md), 앞으로의 교체 절차는 [모델 교체 안내](../docs/model-replacement.md)에 있습니다.
+랜덤 포레스트는 평균 조도(`lux`)와 평균 소음(`noise_db`)을 사용합니다. 시설 설치 기록과 구역 인구는 응답에 `score_included:false`로 표시합니다. [입출력 규격](SERVING.md) · [모델 교체 절차](../docs/model-replacement.md)
 
 ## 저장과 게시
 
@@ -25,7 +25,7 @@
 - **인구:** R2 원문 보존 → 구역·시각·범위 검증 → D1 불변 관측 이력·현재 캐시 저장 → 응답. 새 관측 저장에 실패하면 그 숫자를 현재 자료로 게시하지 않습니다.
 - 모든 원천에서 관측 시각·기준일·조회 시각을 구분합니다. 데이터가 추가돼도 자동 재학습하지 않습니다.
 
-시설 정보는 반경 **1km**의 공개 기록을 집계하며 현재 커버리지는 **송파구·서초구**입니다. CCTV는 설치 행 수와 `카메라대수` 합계를 구분합니다. 기록이 없으면 미확보를 뜻하는 `null`로 표현하고, 시설이 없다는 뜻의 0으로 바꾸지 않습니다. 조명 기록은 점등 상태가 아니고 CCTV 기록은 영상·작동·촬영 범위 정보가 아닙니다.
+시설은 송파구·서초구의 공개 설치 기록을 검색 지점 반경 1km에서 집계합니다. CCTV는 설치 기록 수와 `카메라대수` 합계를 따로 표시합니다. 기록이 없는 곳은 `null`을 반환합니다.
 
 ## 원천과 앱의 갱신 주기
 
@@ -70,7 +70,7 @@ npm run build
 
 Drizzle migration은 DDL만 담으며 기존 적용본을 고치지 않고 새 migration으로 확장합니다. 운영 배포 전에 추가 테이블을 적용해야 합니다. 원문과 관측 이전은 인증된 운영자 import 경로로 처리합니다. 로컬 D1 미리보기는 Sites starter 지침에 따라 migration을 적용합니다.
 
-2026-11-04 클라우드 시험 179개·타입 검사·Worker 빌드, 원격 cloud·frontend CI가 통과했습니다. [GitHub 시설 수집 실행 41836099458](https://github.com/roberYM11/safenight/actions/runs/41836099458)과 운영 DB 네 단계 반영도 확인했습니다. 기존 Python CI의 DB 드라이버·시간대 의존 시험도 수정해 원격 시험 77개를 통과했습니다. 첫 예약 실행과 장기 운영의 성공은 아직 확인한 결과가 아니며, 자세한 검증 범위는 [backend/VALIDATION.md](../backend/VALIDATION.md)를 따릅니다.
+2026-11-04 클라우드 시험 179개·타입 검사·Worker 빌드, 원격 cloud·frontend CI가 통과했습니다. [GitHub 시설 수집 실행 41836099458](https://github.com/roberYM11/safenight/actions/runs/41836099458)과 운영 DB 네 단계 반영도 확인했습니다. 기존 Python CI의 DB 드라이버·시간대 의존 시험도 수정해 원격 시험 77개를 통과했습니다. [당시 실행 기록](../backend/VALIDATION.md)
 
 ## 공개 후 계산·고정 학습·모델 전환 코드 (2026-11-05)
 
@@ -78,7 +78,7 @@ Drizzle migration은 DDL만 담으며 기존 적용본을 고치지 않고 새 m
 
 `/api/internal/pipeline`은 기존 수집 토큰으로 보호됩니다. 외부 정답 등록 → 해시로 고정한 데이터셋 → Python 학습 → Worker의 센서·시간·격자 평가 → 명시적 승인·generation 전환 경로를 제공합니다. 정답이 없으면 학습을 보류합니다. 기준 모델보다 나쁘거나 검증이 부족한 후보를 승인하지 않습니다. 시설·인구는 현재 모델 입력에 포함하지 않습니다.
 
-GitHub Actions의 S-DoT 정기 실행, 시설 게시 직후 D1 callback, 주간 후보 학습을 추가했습니다. 새 callback 단계에서만 운영 토큰을 GitHub Secrets로 전달하며, 공개 원천 파일 수집에는 서울시 API 키가 필요하지 않습니다. **마이그레이션·사이트 배포·Secrets 설정 후 `SAFENIGHT_PIPELINE_ENABLED=true`를 설정해야 새 일정이 실행됩니다.** 이번 코드 변경을 운영 배포 완료로 해석하면 안 됩니다.
+GitHub Actions의 S-DoT 정기 실행, 시설 게시 직후 D1 callback, 주간 후보 학습을 추가했습니다. 새 callback 단계에서만 운영 토큰을 GitHub Secrets로 전달하며, 공개 원천 파일 수집에는 서울시 API 키가 필요하지 않습니다. **마이그레이션·사이트 배포·Secrets 설정 후 `SAFENIGHT_PIPELINE_ENABLED=true`를 설정해야 새 일정이 실행됩니다.**
 
 상세 관계·제약·적용 순서·검증 범위는 [DB와 파이프라인 보정 문서](../docs/database-structure.md), [전체 컬럼](../docs/database-columns.csv), [외래키](../docs/database-foreign-keys.csv)에 있습니다.
 
