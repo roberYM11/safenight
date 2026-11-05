@@ -1,6 +1,6 @@
 # SafeNight
 
-서울에서 장소를 검색하면 주변 센서가 측정한 밝기와 소음을 보여 주는 지도. [사이트 열기](https://safenight-seoul-2026.true-tang-8939.chatgpt.site/)
+서울에서 장소를 검색하면 주변 센서가 측정한 밝기와 소음을 보여 주는 지도. [14초 시연 영상](docs/assets/safenight-demo.mp4) · [사이트 열기 (접근 권한 필요)](https://safenight-seoul-2026.true-tang-8939.chatgpt.site/)
 
 ## 1. 분석의 취지
 
