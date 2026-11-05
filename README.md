@@ -16,18 +16,23 @@
 
 [시연 영상 MP4](docs/assets/safenight-demo.mp4) — 2026-11-05 실제 배포 사이트의 사용 단계를 캡처했다. 새 수집 연결 코드의 운영 배포와는 구분한다.
 
+### 수집·조회 파이프라인
+
+[![수집·DB 반영·지도 조회 파이프라인 원본](docs/assets/pipeline-collection.png)](docs/assets/pipeline-collection.png)
+
+그림을 누르면 원본 크기로 볼 수 있다. 그림 속 **D1 관측값·좌표 이력 / 시설 버전 / 인구 이력·캐시**는 아래 테이블에 대응한다.
+
 ```mermaid
-flowchart LR
-    A[시설 CSV · S-DoT API · 위치 XLSX · 인구 API] --> B[정기 수집 · 검증 · 중단 후 재개]
-    B --> C[R2 원본 · D1 수정 이력과 현재값]
-    C --> D[관측·위치 입력 고정]
-    D --> E[활성 모델 계산 · 결과와 버전 저장]
-    E --> F[지도 · 센서 · 지점 조회 API]
-    C --> G[주변 시설 · 인구 참고 정보]
-    G --> H[SafeNight 지도]
-    F --> H
-    P[Photon 장소 검색 · OSM 지도] --> H
+erDiagram
+    raw_objects ||..o{ observation_revisions : raw_sha
+    observation_revisions ||..o{ current_observations : revision_id
+    observation_revisions ||..o{ feature_snapshots : "관측과 위치 수정본"
+    context_snapshots ||..o{ context_current : snapshot_id
+    population_raw_objects ||..o{ population_observations : raw_sha256
+    population_observations ||..o{ population_cache : observation_id
 ```
+
+`observation_revisions`는 관측과 센서 위치의 수정 이력을 함께 보존한다. `source + entity_id + observed_at`으로 현재 수정본을 선택하고, 시설은 `scope`, 인구는 `area_code`별 현재값을 가리킨다. [핵심 컬럼·PK·FK를 포함한 수집 ERD](docs/database-structure.md#수집조회-erd)
 
 | 데이터 | 새 코드의 수집·반영 방식 |
 |---|---|
@@ -36,19 +41,33 @@ flowchart LR
 | 송파·서초 시설 | 매일 03:15 KST 공개 데이터 브랜치 게시 후 D1/R2 반영 확인 |
 | 공개 구역 인구 | 121개 구역을 4시간마다 수집. 조회 시 갱신과 10분 캐시·요청 임대 병행 |
 
-**D1/R2를 웹 서비스의 기준 저장소로 정했다.** D1은 수집 작업·수정본 → 공개 이력 → 고정 입력·학습 데이터 → 모델·활성 버전 → 예측 결과를 연결한다. R2는 원본과 고정 파일을 해시로 보존하고, Python은 고정 데이터를 읽어 학습한다. [33개 테이블·238개 컬럼의 DB 구조와 ERD](docs/database-structure.md)
+### 학습·모델 교체 파이프라인
+
+[![학습 데이터 고정·모델 검증·활성 버전 전환 파이프라인 원본](docs/assets/pipeline-training.png)](docs/assets/pipeline-training.png)
+
+그림의 **학습 데이터 고정 → Python 학습 → 모델 저장·활성 버전 변경 → 센서 점수 재계산**은 아래 관계로 이어진다. `feature_snapshots`가 앞의 관측 ERD와 학습·예측을 연결한다.
 
 ```mermaid
-flowchart LR
-    A[주간 예약 · 새 정답 확인] --> B[D1·R2 학습 데이터 고정]
-    B --> C[Python 학습]
-    C --> D{기준 모델 · 센서·시간·지역 검증}
-    D -->|통과 후 명시적 승인| E[모델 저장·로딩 확인 · 활성 버전 전환]
-    E --> F[센서 점수 재계산 · 조회 API 반영]
-    D -->|미달| G[현재 모델 유지]
+erDiagram
+    data_releases ||..o{ feature_snapshots : data_release_id
+    data_releases ||..o{ dataset_snapshots : data_release_id
+    feature_snapshots ||..o{ target_values : feature_snapshot_id
+    target_definitions ||..o{ target_values : target_version
+    target_definitions ||..o{ dataset_snapshots : target_version
+    dataset_snapshots ||..o{ training_runs : "데이터와 버전 고정"
+    training_runs |o..o{ model_artifacts : "학습 모델 산출"
+    model_artifacts ||..o{ model_activations : model_version
+    model_activations ||..o| active_models : "활성 이름과 세대"
+    feature_snapshots ||..o{ prediction_results : "입력과 버전"
+    model_artifacts ||..o{ prediction_results : "모델과 입력 버전"
+    data_releases ||..o{ point_assessments : data_release_id
+    point_assessments ||--o{ point_contributors : assessment_id
+    prediction_results ||--o{ point_contributors : prediction_id
 ```
 
-새 관측만으로 정답이 생기지는 않는다. 정답이 없으면 학습을 보류한다. 정기 실행은 Worker 배포·DB 마이그레이션·Secrets 및 `SAFENIGHT_PIPELINE_ENABLED=true` 설정 후 사용할 수 있다. [운영·실행 안내](cloud/README.md)
+**D1은 관계와 버전을, R2는 원본·고정 데이터·모델 파일을 보존한다.** D1의 `object_key`와 해시로 R2 파일을 찾는다. 데이터셋에 포함된 정확한 피처·정답 목록은 R2 manifest에 기록하며, 별도의 DB 외래키로 직접 결합한 관계는 아니다. 시설·인구도 현재 모델 입력과 별도다. [핵심 컬럼·PK·FK를 포함한 학습 ERD](docs/database-structure.md#학습예측-erd) · [전체 33개 테이블·238개 컬럼](docs/database-columns.csv)
+
+새 관측만으로 정답이 생기지는 않는다. 정답이 없으면 학습을 보류하고, 검증 통과 후보는 명시적 승인 후 전환한다. 정기 실행은 Worker 배포·DB 마이그레이션·Secrets 및 `SAFENIGHT_PIPELINE_ENABLED=true` 설정 후 사용할 수 있다. [운영·실행 안내](cloud/README.md)
 
 ## 3. 분석 노트북과 발견한 인사이트
 

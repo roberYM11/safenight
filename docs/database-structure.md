@@ -8,32 +8,17 @@
 
 운영 DB의 마이그레이션·사이트 배포·GitHub 비밀 설정은 이번 코드 변경과 구분한다. 아래의 구현 검증은 로컬 D1/R2와 별도 임시 PostgreSQL에서 수행했다.
 
-## 실제로 바뀐 흐름
+## 파이프라인과 데이터 구조 연결
 
-```mermaid
-flowchart TD
-    S[GitHub Actions 정기·수동 실행] --> J[S-DoT due · step]
-    J --> R[R2 응답 원문]
-    J --> P[D1 현재값·공개 이력·후속 작업을 같은 batch로 저장]
-    P --> D[20행씩 재개하는 후속 작업자]
-    D --> F[R2 입력 manifest + D1 피처 고정]
-    F --> I[활성 모델로 계산 · 예측 결과 저장]
-    I --> Q[지도·센서 조회: 저장 결과 재사용 + 최신성 검사]
-    Q --> A[지점 보간 · 사용 센서와 가중치 저장]
-    F --> L{검증된 외부 정답 등록 여부}
-    L -->|없음| N[labels_unavailable · 학습 보류]
-    L -->|있음| DS[정확한 행·정답을 고정한 데이터셋]
-    DS --> T[Python 학습 · 별도 평가 모델 내보내기]
-    T --> V[Worker가 센서·시간·격자 분리와 기준 모델 지표 재계산]
-    V --> C[후보 등록]
-    C --> AP[통과 후보의 명시적 승인]
-    AP --> M[generation 조건부 전환 · 이력 · 재계산 작업]
-    M --> I
-    FC[시설 GitHub 데이터 브랜치 게시] --> FM[due · mirror_step · manifest와 current 일치 확인]
-    FM --> CT[D1/R2 시설 참고 정보]
-    POP[4시간 정기 수집 · 인구 조회] --> PL[D1 구역별 임대·10분 요청 제한]
-    PL --> PC[원문·이력·현재 캐시]
-```
+사용자가 작성한 두 구조도를 원본 그대로 사용한다. 그림 속 DB 박스의 관계를 아래 ERD로 구체화했다.
+
+[![수집·조회 파이프라인 원본](assets/pipeline-collection.png)](assets/pipeline-collection.png)
+
+**관측값·좌표 이력 / 시설 버전 / 인구 이력·캐시 → [수집·조회 ERD](#수집조회-erd)**
+
+[![학습·모델 교체 파이프라인 원본](assets/pipeline-training.png)](assets/pipeline-training.png)
+
+**학습 데이터 고정 / 모델 저장·활성 버전 / 센서 재계산 → [학습·예측 ERD](#학습예측-erd)**
 
 D1/R2가 웹 서빙의 기준 저장소다. Python은 고정된 내보내기 파일을 읽는 학습 작업자다. PostgreSQL의 기존 독립 수집·분석 기능은 유지하며, 두 DB의 양방향 정정 동기화를 추가하지 않았다.
 
@@ -43,29 +28,172 @@ D1/R2가 웹 서빙의 기준 저장소다. Python은 고정된 내보내기 파
 
 ## 테이블 관계
 
+핵심 컬럼만 표시했다. `PK`는 기본키, `FK`는 실제 D1 외래키다. 실선은 부모 키가 자식 기본키를 구성하는 식별 관계, 점선은 비식별 관계이며 둘 다 실제 FK다. R2는 DB 테이블이 아니므로 ERD 안에 가상의 R2 테이블을 만들지 않았다. `object_key`는 R2 파일 주소, 해시는 파일 검증값이다.
+
+### 수집·조회 ERD
+
+수집 그림의 세 저장소 박스에 대응한다. 관측과 위치는 `observation_revisions.source`로 구분하고, 같은 센서의 특정 측정시각마다 사용할 수정본을 선택한다.
+
 ```mermaid
 erDiagram
-    collection_jobs o|--o| observation_publications : publishes
-    observation_publications ||--o{ observation_selections : records
-    observation_revisions ||--o{ observation_selections : chosen_revision
-    observation_publications o|--o{ derivation_jobs : enqueues
-    model_artifacts o|--o{ derivation_jobs : pinned_rescore_model
-    data_releases ||--o{ feature_snapshots : freezes
-    observation_revisions ||--o{ feature_snapshots : measurement_and_location
-    feature_snapshots ||--o{ target_values : labeled_revision
-    target_definitions ||--o{ target_values : meaning
-    data_releases ||--o{ dataset_snapshots : freezes_members
-    target_definitions ||--o{ dataset_snapshots : target_version
-    dataset_snapshots ||--o{ training_runs : trains
-    training_runs o|--o{ model_artifacts : produces
-    model_artifacts ||--o{ model_activations : activates
-    model_activations ||--o| active_models : current_generation
-    feature_snapshots ||--o{ prediction_results : exact_input
-    model_artifacts ||--o{ prediction_results : exact_model
-    data_releases ||--o{ point_assessments : input_manifest
-    point_assessments ||--o{ point_contributors : uses
-    prediction_results ||--o{ point_contributors : sensor_prediction
+    raw_objects ||..o{ observation_revisions : raw_sha
+    observation_revisions ||..o{ current_observations : revision_id
+    observation_revisions ||..o{ feature_snapshots : "관측과 위치 수정본"
+    context_snapshots ||..o{ context_current : snapshot_id
+    population_raw_objects ||..o{ population_observations : raw_sha256
+    population_observations ||..o{ population_cache : observation_id
+    raw_objects {
+        text sha256 PK
+        text object_key
+    }
+    observation_revisions {
+        text id PK
+        text source
+        text entity_id
+        text observed_at
+        text raw_sha FK
+        text payload_json
+    }
+    current_observations {
+        text source PK
+        text entity_id PK
+        text observed_at PK
+        text revision_id FK
+    }
+    context_snapshots {
+        text id PK
+        text object_key
+        text artifact_sha256
+    }
+    context_current {
+        text scope PK
+        text snapshot_id FK
+    }
+    population_raw_objects {
+        text sha256 PK
+        text object_key
+    }
+    population_observations {
+        text id PK
+        text area_code
+        text observed_at
+        text raw_sha256 FK
+    }
+    population_cache {
+        text area_code PK
+        text observation_id FK
+        text expires_at
+    }
 ```
+
+원문 응답은 R2에, 원문의 해시·주소는 D1의 `raw_objects`·`population_raw_objects`에 저장한다. 시설 실제 데이터도 `context_snapshots.object_key`의 R2 파일에 있다. `feature_snapshots`는 아래 ERD에서 관측 수정본과 위치 수정본을 각각 참조한다. 시설·인구에서 현재 피처로 직접 연결되는 FK는 없다.
+
+### 학습·예측 ERD
+
+학습 그림의 고정 데이터 → Python 학습 → 모델·활성 버전 → 재계산 결과에 대응한다. 이름이 같은 `feature_snapshots`가 앞의 수집 ERD와 연결점이다.
+
+```mermaid
+erDiagram
+    data_releases ||..o{ feature_snapshots : data_release_id
+    data_releases ||..o{ dataset_snapshots : data_release_id
+    feature_snapshots ||..o{ target_values : feature_snapshot_id
+    target_definitions ||..o{ target_values : target_version
+    target_definitions ||..o{ dataset_snapshots : target_version
+    dataset_snapshots ||..o{ training_runs : "데이터와 버전 고정"
+    training_runs |o..o{ model_artifacts : "학습 모델 산출"
+    model_artifacts ||..o{ model_activations : model_version
+    model_activations ||..o| active_models : "활성 이름과 세대"
+    feature_snapshots ||..o{ prediction_results : "입력과 버전"
+    model_artifacts ||..o{ prediction_results : "모델과 입력 버전"
+    data_releases ||..o{ point_assessments : data_release_id
+    point_assessments ||--o{ point_contributors : assessment_id
+    prediction_results ||--o{ point_contributors : prediction_id
+    data_releases {
+        text id PK
+        text manifest_object_key
+        text manifest_sha256
+        text available_cutoff
+    }
+    feature_snapshots {
+        text id PK
+        text entity_id
+        text as_of
+        text data_release_id FK
+        text observation_revision_id FK
+        text location_revision_id FK
+        text feature_version
+    }
+    target_definitions {
+        text version PK
+        text kind
+        text definition_object_key
+    }
+    target_values {
+        text id PK
+        text feature_snapshot_id FK
+        text target_version FK
+        real value
+        text available_at
+    }
+    dataset_snapshots {
+        text id PK
+        text data_release_id FK
+        text target_version FK
+        text feature_version
+        text object_key
+        text sha256
+    }
+    training_runs {
+        text id PK
+        text dataset_id FK
+        text feature_version FK
+        text target_version FK
+        text metrics_json
+    }
+    model_artifacts {
+        text version PK
+        text training_run_id FK
+        text feature_version FK
+        text target_version FK
+        text object_key
+        text digest
+    }
+    model_activations {
+        text name PK
+        integer generation PK
+        text model_version FK
+        text previous_version FK
+    }
+    active_models {
+        text name PK, FK
+        integer generation FK
+        text model_version FK
+    }
+    prediction_results {
+        text id PK
+        text feature_snapshot_id FK
+        text feature_version FK
+        text model_version FK
+        real score
+    }
+    point_assessments {
+        text id PK
+        text data_release_id FK
+        real lat
+        real lon
+        real score
+    }
+    point_contributors {
+        text assessment_id PK, FK
+        text prediction_id PK, FK
+        real distance_m
+        real weight
+    }
+```
+
+`training_runs → dataset_snapshots`는 ID와 입력·목표 버전을 함께 묶은 **복합 FK**다. 모델의 학습 실행, 예측의 피처·모델, 활성 모델의 이름·세대·모델도 복합 FK로 맞춘다. 기존 번들 모델은 학습 실행이 없어 `training_run_id`가 NULL일 수 있다. 전환 이력의 `previous_version`도 같은 모델 테이블을 참조하지만 최초 전환에는 NULL을 허용한다. 지점 보간 결과는 `point_contributors`에 실제 센서 예측 ID·거리·가중치를 남긴다.
+
+**파일 안의 소속 관계:** 데이터셋의 정확한 피처·정답 목록은 R2 manifest·고정 JSON에 기록한다. 따라서 `dataset_snapshots → feature_snapshots`를 물리적 FK로 그리지 않았다. FK·컬럼 전체는 [외래키 목록](database-foreign-keys.csv)·[컬럼 목록](database-columns.csv)에서 확인할 수 있다.
 
 기존 17개는 수집 9개(`collection_jobs`, `raw_objects`, `observation_revisions`, `current_observations`, `latest_observations`, `job_revisions`, `job_pages`, `source_checkpoints`, `operation_guards`), 시설 5개(`context_snapshots`, `context_current`, `context_refresh_jobs`, `context_raw_documents`, `context_staged_sources`), 인구 3개(`population_raw_objects`, `population_observations`, `population_cache`)다.
 

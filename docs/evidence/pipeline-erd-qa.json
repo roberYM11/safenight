@@ -1,0 +1,271 @@
+{
+  "scope": "documentation only; original user pipeline images plus source-backed ERDs",
+  "status": "PASS",
+  "schema_tables": 33,
+  "foreign_key_check": [],
+  "assets": [
+    {
+      "asset": "docs/assets/pipeline-collection.png",
+      "source_attachment": "image-2.png",
+      "sha256": "c562047766026a9ae707f82c46a83231ee4e6e86ead665bb6b2e50b46af5da06",
+      "unchanged": true
+    },
+    {
+      "asset": "docs/assets/pipeline-training.png",
+      "source_attachment": "image-1.png",
+      "sha256": "ce8d19ed648e578249e4234c681c2b9c05c4848364f239691e55bbefdb9e03ed",
+      "unchanged": true
+    }
+  ],
+  "erd_relationship_occurrences_checked": 40,
+  "erd_attributes_checked": 83,
+  "relationships": [
+    {
+      "file": "README.md",
+      "parent": "raw_objects",
+      "child": "observation_revisions",
+      "label": "raw_sha"
+    },
+    {
+      "file": "README.md",
+      "parent": "observation_revisions",
+      "child": "current_observations",
+      "label": "revision_id"
+    },
+    {
+      "file": "README.md",
+      "parent": "observation_revisions",
+      "child": "feature_snapshots",
+      "label": "\"관측과 위치 수정본\""
+    },
+    {
+      "file": "README.md",
+      "parent": "context_snapshots",
+      "child": "context_current",
+      "label": "snapshot_id"
+    },
+    {
+      "file": "README.md",
+      "parent": "population_raw_objects",
+      "child": "population_observations",
+      "label": "raw_sha256"
+    },
+    {
+      "file": "README.md",
+      "parent": "population_observations",
+      "child": "population_cache",
+      "label": "observation_id"
+    },
+    {
+      "file": "README.md",
+      "parent": "data_releases",
+      "child": "feature_snapshots",
+      "label": "data_release_id"
+    },
+    {
+      "file": "README.md",
+      "parent": "data_releases",
+      "child": "dataset_snapshots",
+      "label": "data_release_id"
+    },
+    {
+      "file": "README.md",
+      "parent": "feature_snapshots",
+      "child": "target_values",
+      "label": "feature_snapshot_id"
+    },
+    {
+      "file": "README.md",
+      "parent": "target_definitions",
+      "child": "target_values",
+      "label": "target_version"
+    },
+    {
+      "file": "README.md",
+      "parent": "target_definitions",
+      "child": "dataset_snapshots",
+      "label": "target_version"
+    },
+    {
+      "file": "README.md",
+      "parent": "dataset_snapshots",
+      "child": "training_runs",
+      "label": "\"데이터와 버전 고정\""
+    },
+    {
+      "file": "README.md",
+      "parent": "training_runs",
+      "child": "model_artifacts",
+      "label": "\"학습 모델 산출\""
+    },
+    {
+      "file": "README.md",
+      "parent": "model_artifacts",
+      "child": "model_activations",
+      "label": "model_version"
+    },
+    {
+      "file": "README.md",
+      "parent": "model_activations",
+      "child": "active_models",
+      "label": "\"활성 이름과 세대\""
+    },
+    {
+      "file": "README.md",
+      "parent": "feature_snapshots",
+      "child": "prediction_results",
+      "label": "\"입력과 버전\""
+    },
+    {
+      "file": "README.md",
+      "parent": "model_artifacts",
+      "child": "prediction_results",
+      "label": "\"모델과 입력 버전\""
+    },
+    {
+      "file": "README.md",
+      "parent": "data_releases",
+      "child": "point_assessments",
+      "label": "data_release_id"
+    },
+    {
+      "file": "README.md",
+      "parent": "point_assessments",
+      "child": "point_contributors",
+      "label": "assessment_id"
+    },
+    {
+      "file": "README.md",
+      "parent": "prediction_results",
+      "child": "point_contributors",
+      "label": "prediction_id"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "raw_objects",
+      "child": "observation_revisions",
+      "label": "raw_sha"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "observation_revisions",
+      "child": "current_observations",
+      "label": "revision_id"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "observation_revisions",
+      "child": "feature_snapshots",
+      "label": "\"관측과 위치 수정본\""
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "context_snapshots",
+      "child": "context_current",
+      "label": "snapshot_id"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "population_raw_objects",
+      "child": "population_observations",
+      "label": "raw_sha256"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "population_observations",
+      "child": "population_cache",
+      "label": "observation_id"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "data_releases",
+      "child": "feature_snapshots",
+      "label": "data_release_id"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "data_releases",
+      "child": "dataset_snapshots",
+      "label": "data_release_id"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "feature_snapshots",
+      "child": "target_values",
+      "label": "feature_snapshot_id"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "target_definitions",
+      "child": "target_values",
+      "label": "target_version"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "target_definitions",
+      "child": "dataset_snapshots",
+      "label": "target_version"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "dataset_snapshots",
+      "child": "training_runs",
+      "label": "\"데이터와 버전 고정\""
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "training_runs",
+      "child": "model_artifacts",
+      "label": "\"학습 모델 산출\""
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "model_artifacts",
+      "child": "model_activations",
+      "label": "model_version"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "model_activations",
+      "child": "active_models",
+      "label": "\"활성 이름과 세대\""
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "feature_snapshots",
+      "child": "prediction_results",
+      "label": "\"입력과 버전\""
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "model_artifacts",
+      "child": "prediction_results",
+      "label": "\"모델과 입력 버전\""
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "data_releases",
+      "child": "point_assessments",
+      "label": "data_release_id"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "point_assessments",
+      "child": "point_contributors",
+      "label": "assessment_id"
+    },
+    {
+      "file": "docs/database-structure.md",
+      "parent": "prediction_results",
+      "child": "point_contributors",
+      "label": "prediction_id"
+    }
+  ],
+  "local_links_and_anchors": "PASS",
+  "readme_sections": 5,
+  "readme_lines": 117,
+  "mermaid_syntax_reference": "https://mermaid.js.org/syntax/entityRelationshipDiagram.html",
+  "rendering": "native GitHub Mermaid; syntax/relations/attributes reviewed; browser rendering not executed",
+  "cleanup": "Owned /tmp/safenight-erd.Ifb9zF removed and absence verified; no server/browser/kernel started.",
+  "self_review": "LIGHT docs-only correction; originals preserved, actual D1 FK/column markers checked, no runtime code or notebook change."
+}
