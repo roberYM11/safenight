@@ -7,7 +7,7 @@
     {
       "notebook": "safenight-data-integration.ipynb",
       "code_cells_executed": 5,
-      "sha256": "156a4ad179429104471943403f7975637171b90230ce8920a381ffb8c2173d36",
+      "sha256": "35c132116142e4cfec783c8a93e4bbef4f1a07c7b13d1150fd63830278b95177",
       "errors": 0
     },
     {
@@ -109,5 +109,14 @@
     "merge key and row validation",
     "explicit missing facilities",
     "relative paths in public copies"
-  ]
+  ],
+  "data_integration_prose_revision": {
+    "markdown_characters_before": 1491,
+    "markdown_characters_after": 500,
+    "unchanged_code_cells": 5,
+    "saved_outputs_unchanged": true,
+    "calculation_rerun": false,
+    "local_links_valid": true,
+    "scope": "markdown only; original calculations and execution results retained"
+  }
 }
