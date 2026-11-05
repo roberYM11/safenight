@@ -1,0 +1,97 @@
+{
+  "schema": {
+    "tables": 33,
+    "columns": 238,
+    "foreign_key_violations": [],
+    "table_names": [
+      "active_models",
+      "collection_jobs",
+      "context_current",
+      "context_raw_documents",
+      "context_refresh_jobs",
+      "context_snapshots",
+      "context_staged_sources",
+      "current_observations",
+      "data_releases",
+      "dataset_snapshots",
+      "derivation_jobs",
+      "feature_snapshots",
+      "job_pages",
+      "job_revisions",
+      "latest_observations",
+      "model_activations",
+      "model_artifacts",
+      "observation_publications",
+      "observation_revisions",
+      "observation_selections",
+      "operation_guards",
+      "point_assessments",
+      "point_contributors",
+      "population_cache",
+      "population_observations",
+      "population_raw_objects",
+      "population_request_leases",
+      "prediction_results",
+      "raw_objects",
+      "source_checkpoints",
+      "target_definitions",
+      "target_values",
+      "training_runs"
+    ]
+  },
+  "documentation": {
+    "files": [
+      "README.md",
+      "cloud/README.md",
+      "docs/database-structure.md",
+      "docs/scoring-and-serving.md",
+      "notebooks/README.md"
+    ],
+    "local_links": true,
+    "sections": 5
+  },
+  "verification": {
+    "cloud_tests": 217,
+    "backend_tests": 81,
+    "skipped": 0,
+    "typecheck": "PASS",
+    "ruff": "PASS",
+    "basedpyright": "PASS",
+    "build": "PASS",
+    "root_http_tests": 16
+  },
+  "media": {
+    "source": "actual deployed site captured by CUA",
+    "sequence": [
+      "initial observation",
+      "type 잠실역",
+      "search result",
+      "expand contributing sensors",
+      "nearby facilities",
+      "source details",
+      "return observation"
+    ],
+    "frames": 7,
+    "duration_seconds": 14,
+    "gif": "docs/assets/safenight-demo.gif",
+    "mp4": "docs/assets/safenight-demo.mp4",
+    "static": "docs/assets/safenight-current-ui.png",
+    "decode": "PASS"
+  },
+  "verified_commits": {
+    "collection": "6ec08ff",
+    "notebooks": "d702bb3"
+  },
+  "review": {
+    "tier": "HEAVY",
+    "gate": "self-review; no explicit strict review request",
+    "scope": "source diff + all eight criteria + actual site captures + executed public notebooks",
+    "diagnostics": "tsc and basedpyright clean; TypeScript LSP unavailable, prior install declined"
+  },
+  "resources": {
+    "browser": "task tab closed; iab list empty",
+    "jupyter": "all four MCP notebook bindings disconnected; no explicit restart/stop API invoked",
+    "postgresql": "owned PG stopped per final-checks.txt",
+    "root_tmp": "PASS: owned /tmp/safenight-ulw.LQbGn2 and all nested Node/Bun caches and source frames removed; path absence verified."
+  }
+}

@@ -1,0 +1,9 @@
+2026-11-05 actual deployed site, CUA browser surface
+URL: https://safenight-seoul-2026.true-tang-8939.chatgpt.site/
+Scenario: createBrowserTab('iab', URL), initial observation -> typeText(place-query,'잠실역') -> click('장소 검색') -> expand('계산에 사용한 관측 8곳') -> click('주변 안전시설·데이터 보기') -> expand('자료 기준일·출처와 반영 범위') -> return observation.
+PASS observable: AX state showed 잠실역, 주변 센서 8곳 기준, nearest sensor 304m, individual sensor weights, public facilities and nearby population area with stale/containment labels. Example source data seen: lux0.7/noise47.4, population outside-area boundary13m, facilities source dates. These are timestamped observations during capture, not fixed guarantees.
+Capture: 7 actual viewport screenshots; GIF/MP4 assemble these usage steps at two seconds per frame, without synthesizing or replacing app values. Source screenshot bytes were JPEG despite a .png filename; corrected encoding before publication.
+Media: docs/assets/safenight-demo.gif (456x851), safenight-demo.mp4 (h264,456x852,14seconds), safenight-current-ui.png (457x853).
+Verify: ffprobe metadata and complete ffmpeg decode to null succeeded. Static image visually inspected: readable search, selected point, score, measured lux/noise and observation time.
+Scope: existing deployed site was browsed normally. New scheduled collection code was not deployed or executed in production.
+Cleanup receipt: demoTab.close(); cua.listTabs({browser:'iab'}) returned []. No user-owned browser tabs changed. Original source captures removed with root task temp cleanup after media validation.
