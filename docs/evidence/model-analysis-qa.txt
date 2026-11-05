@@ -1,0 +1,216 @@
+$ cd backend && uv run --locked python scripts/compare_models.py --output ../docs/model-analysis
+{
+  "split": {
+    "method": "GroupShuffleSplit",
+    "group": "sensor_id",
+    "seed": 42,
+    "test_size": 0.2,
+    "rows": 3230,
+    "sensors": 652,
+    "train_rows": 2586,
+    "test_rows": 644,
+    "train_sensors": 521,
+    "test_sensors": 131,
+    "overlapping_sensors": 0
+  },
+  "metrics": [
+    {
+      "model": "train_median",
+      "mae": 7.946631094720497,
+      "rmse": 9.432333644607416,
+      "r2": -0.00012125219107583796,
+      "delta_mae": -0.33419052222076306,
+      "delta_rmse": -0.09850225292044534,
+      "delta_r2": 0.020997686085636014
+    },
+    {
+      "model": "current_leaf3",
+      "mae": 8.28082161694126,
+      "rmse": 9.530835897527862,
+      "r2": -0.02111893827671185,
+      "delta_mae": 0.0,
+      "delta_rmse": 0.0,
+      "delta_r2": 0.0
+    },
+    {
+      "model": "variant_leaf1",
+      "mae": 8.47244669971127,
+      "rmse": 9.758516535964684,
+      "r2": -0.07048836631401101,
+      "delta_mae": 0.19162508277000967,
+      "delta_rmse": 0.22768063843682285,
+      "delta_r2": -0.04936942803729916
+    }
+  ]
+}
+$ ruff check backend/scripts/compare_models.py
+All checks passed!
+$ ruff check --config backend/pyproject.toml --ignore INP001 docs/model-analysis/plot_pdp.py
+All checks passed!
+$ python docs/model-analysis/plot_pdp.py  # separate existing Matplotlib environment
+plot runtime 3.13.14 Matplotlib 3.11.2 PNG (1728, 832)
+
+Independent check from raw CSV + cloud/app/server/data/manifest.json. Executed Python source:
+import csv, hashlib, json
+from pathlib import Path
+import numpy as np
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.inspection import partial_dependence
+base = Path("docs/model-analysis")
+def read_rows(path):
+    with path.open() as f:
+        return list(csv.DictReader(f))
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+bundle = json.loads(Path("cloud/app/server/data/manifest.json").read_text())
+m = json.loads((base/"metrics.json").read_text())
+snapshot = Path(m["snapshot"])
+assert sha(snapshot) == m["snapshot_sha256"] == bundle["training_sha256"]
+assert sha(Path("backend/scripts/compare_models.py")) == m["script_sha256"]
+rows = read_rows(snapshot)
+train = np.array([r["sensor_id"] in set(bundle["train_groups"]) for r in rows])
+test = np.array([r["sensor_id"] in set(bundle["test_groups"]) for r in rows])
+assert not np.any(train & test) and np.all(train | test)
+assert (len(rows),len(set(r["sensor_id"] for r in rows)),train.sum(),test.sum()) == (3230,652,2586,644)
+print("PASS snapshot and comparison script SHA-256, 3230 source rows, 652 sensors, exact manifest split 2586/644 rows and disjoint groups")
+x = np.array([(float(r["lux"]),float(r["noise_db"])) for r in rows])
+y = np.array([float(r["safety_index"]) for r in rows])
+pdp = read_rows(base/"partial_dependence.csv")
+metrics = read_rows(base/"metrics.csv")
+for i,(name,leaf) in enumerate([("train_median",None),("current_leaf3",3),("variant_leaf1",1)]):
+    if leaf is None:
+        pred = np.full(sum(test),np.median(y[train]))
+    else:
+        model = RandomForestRegressor(n_estimators=114,max_depth=18,min_samples_leaf=leaf,random_state=42,n_jobs=1).fit(x[train],y[train])
+        pred = model.predict(x[test])
+        for col,key in enumerate(("lux","noise_db")):
+            panel = [r for r in pdp if r["feature"]==key]
+            grid = np.linspace(*np.percentile(x[train,col],[5,95]),51)
+            np.testing.assert_allclose(grid,[float(r["value"]) for r in panel],rtol=0,atol=1e-12)
+            library = partial_dependence(model,x[test],[col],method="brute",custom_values={col:grid})
+            np.testing.assert_allclose(library.average[0],[float(r[name]) for r in panel],rtol=0,atol=1e-12)
+            print("PASS",name,key,"all 51 values match sklearn brute PDP; endpoints",round(library.average[0][0],3),round(library.average[0][-1],3))
+    error = y[test]-pred
+    actual = (abs(error).mean(),np.sqrt(np.mean(error**2)),1-np.sum(error**2)/np.sum((y[test]-y[test].mean())**2))
+    scores = m["metrics"][i]
+    assert metrics[i]["model"]==scores["model"]==name
+    for number,k in zip(actual,("mae","rmse","r2")):
+        np.testing.assert_allclose([scores[k],float(metrics[i][k])],number,rtol=0,atol=1e-12)
+        delta = number - m["metrics"][1][k]
+        np.testing.assert_allclose([scores["delta_"+k],float(metrics[i]["delta_"+k])],delta,rtol=0,atol=1e-12)
+    if leaf==3:
+        np.testing.assert_allclose([actual[0],actual[2]],[bundle["validation_mae"],bundle["validation_r2"]],rtol=0,atol=1e-12)
+    print("PASS",name,"manual MAE/RMSE/R2 and delta in both outputs",*[round(s,6) for s in actual])
+print("PASS production reference MAE/R2, two-input PDPs, all independent tolerances <=1e-12")
+
+$ backend/.venv/bin/python <check source above>
+PASS snapshot and comparison script SHA-256, 3230 source rows, 652 sensors, exact manifest split 2586/644 rows and disjoint groups
+PASS train_median manual MAE/RMSE/R2 and delta in both outputs 7.946631 9.432334 -0.000121
+PASS current_leaf3 lux all 51 values match sklearn brute PDP; endpoints 80.854 84.393
+PASS current_leaf3 noise_db all 51 values match sklearn brute PDP; endpoints 81.259 77.739
+PASS current_leaf3 manual MAE/RMSE/R2 and delta in both outputs 8.280822 9.530836 -0.021119
+PASS variant_leaf1 lux all 51 values match sklearn brute PDP; endpoints 80.85 82.948
+PASS variant_leaf1 noise_db all 51 values match sklearn brute PDP; endpoints 81.278 74.775
+PASS variant_leaf1 manual MAE/RMSE/R2 and delta in both outputs 8.472447 9.758517 -0.070488
+PASS production reference MAE/R2, two-input PDPs, all independent tolerances <=1e-12
+Visual QA: inspected final docs/model-analysis/partial_dependence.png in view_image. Both panels and both model lines are visible. Units, legend, training-decile marks, and sample/method note fit within the 1728x832 frame.
+
+Research notebook validation from independent raw CSV reconstruction (no kernel). Executed Python source:
+from pathlib import Path
+import json,hashlib
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.isotonic import IsotonicRegression
+from sklearn.model_selection import GroupShuffleSplit
+from scipy.optimize import lsq_linear
+b=Path('/Users/yumin/Documents/projects/agent/outputs')
+out=b/'pdp-score-research-2026-11-05'
+snap=b/'random-forest-pdp/input-snapshot.csv'
+raw=pd.read_csv(snap)
+spec=json.loads((out/'candidate-score-specification.json').read_text())
+cols=sum(spec['blocks'],[])
+x=raw[cols].to_numpy(float); y=100-raw.safety_index.to_numpy()
+site=pd.factorize(pd.MultiIndex.from_frame(raw[['위도','경도']]))[0]
+bad=(raw['위도']>90)&raw['경도'].between(33,39)
+assert (len(x),len(set(site)),raw.duplicated(cols+['safety_index']).sum(),bad.sum(),len(set(site[bad])))==(3713,671,583,11,2)
+assert raw.level_2.str[:10].unique().tolist()==['2025-10-12']
+assert hashlib.sha256(snap.read_bytes()).hexdigest()==json.loads((out/'run-metadata.json').read_text())['input_sha256']
+saved=pd.read_csv(out/'data-splits.csv')
+tv,te=next(GroupShuffleSplit(n_splits=1,test_size=.2,random_state=42).split(x,groups=site))
+a,c=next(GroupShuffleSplit(n_splits=1,test_size=.25,random_state=43).split(tv,groups=site[tv]))
+tr,ca=tv[a],tv[c]
+for key,idx,nr,ns in [('train',tr,2230,402),('calibration',ca,740,134),('test',te,743,135)]:
+ assert set(idx)==set(saved.row[saved.split==key]) and len(idx)==nr and len(set(site[idx]))==ns
+assert set(site[tr]).isdisjoint(site[ca]) and set(site[te]).isdisjoint(site[tv])
+assert np.all(x[ca,8]==0)
+print('PASS research: input sha, 3713 rows, 671 coordinate groups, 583 duplicate inputs+target, 11 swapped-coordinate rows in 2 groups, split 2230/740/743 rows and 402/134/135 groups, streetlight positive calibration sites 0')
+ref=np.array(spec['reference_rows'])
+assert set(ref)==set(saved.row[saved.reference]) and set(ref)<=set(tr) and len(set(site[ref]))==128
+forest=RandomForestRegressor(n_estimators=114,max_depth=18,max_features=None,random_state=42).fit(x[tr],100-y[tr])
+risk=lambda a: 100-forest.predict(a)
+mu=risk(x[ref]).mean()
+def component(keys):
+ vals, inv=np.unique(x[:,keys],axis=0,return_inverse=True)
+ table=[]
+ for segment in np.array_split(vals,max(1,len(vals)//64)):
+  mixed=np.tile(x[ref],(len(segment),1))
+  mixed[:,keys]=np.repeat(segment,len(ref),axis=0)
+  table.extend(risk(mixed).reshape(-1,len(ref)).mean(axis=1))
+ return np.array(table)[inv]
+singles=np.column_stack([component([k]) for k in range(10)])
+blocks=np.column_stack([component([0,1,2]),component([3,4,5,6]),singles[:,7:]])
+shape=blocks.copy();maps=[]
+for j,(k,cap) in enumerate([(7,4),(8,np.inf),(9,4)],2):
+ grid,first=np.unique(x[:,k],return_index=True)
+ iso=IsotonicRegression(increasing=False).fit(grid.clip(max=cap),blocks[first,j])
+ maps.append(iso.predict(grid.clip(max=cap)))
+ shape[:,j]=iso.predict(x[:,k].clip(max=cap))
+ print('facility',k,'whole-snapshot count grid',grid.tolist(),'values absent on train',np.setdiff1d(grid,np.unique(x[tr,k])).tolist())
+for m in [singles,blocks,shape]: m-=m[ref].mean(axis=0)
+w=1/np.bincount(site)[site]
+free=np.ptp(shape[ca],axis=0)>1e-10
+coef=np.ones(5)
+design=np.column_stack([np.ones(len(ca)),shape[ca][:,free]])
+sw=np.sqrt(w[ca])
+fit=lsq_linear(design*sw[:,None],(y[ca]-shape[ca][:,~free].sum(1))*sw,bounds=([-np.inf]+[0]*sum(free),np.inf),tol=1e-12)
+coef[free]=fit.x[1:]; alpha=fit.x[0]; final=alpha+shape@coef
+assert list(free)==[True,True,True,False,True] and coef[3]==1
+expected=pd.read_csv(out/'share/results.csv').set_index('Method')
+scores={}
+for name,pred in [('Original RF',risk(x)),('Single PDP sum',mu+singles.sum(1)),('Block PDP sum',mu+blocks.sum(1)),('Shape constraints',mu+shape.sum(1)),('Final score',final)]:
+ e=(pred.clip(0,50)-y)[te]
+ per_site=np.array([(np.abs(e[site[te]==s]).mean(),(e[site[te]==s]**2).mean()) for s in set(site[te])])
+ mae,mse=per_site.mean(axis=0); rmse=np.sqrt(mse)
+ np.testing.assert_allclose([mae,rmse],expected.loc[name],rtol=0,atol=1e-10)
+ scores[name]=mae
+ print(f'PASS research: {name} MAE {mae:.7f} RMSE {rmse:.7f}')
+print('research MAE decrease %',100*(1-scores['Final score']/scores['Original RF']))
+total=rf_rev=new_rev=0
+for j,(k,cap) in enumerate([(7,4),(8,np.inf),(9,4)],2):
+ grid=np.unique(x[:,k]); curves=[]; mins=[]
+ for val,effect in zip(grid,maps[j-2]):
+  sweep=x[te].copy(); sweep[:,k]=val; curves.append(risk(sweep))
+  mins.append(final[te]+coef[j]*(effect-(shape[te,j]+maps[j-2][np.searchsorted(grid,x[ref,k])].mean())))
+ dr=np.diff(np.clip(curves,0,50),axis=0); dn=np.diff(np.clip(mins,0,50),axis=0)
+ total+=dr.size; rf_rev+=(dr>1e-6).sum();new_rev+=(dn>1e-6).sum()
+assert (total,rf_rev,new_rev)==(17089,1263,0)
+expected=pd.read_csv(out/'share/constraints.csv')
+assert np.all(expected.Comparisons==total) and list(expected.Reversals)==[rf_rev,new_rev]
+print('PASS research: 17089 adjacent simulated comparisons; RF 1263, final 0 (threshold 1e-6).')
+
+$ /Users/yumin/miniforge3/envs/mcp-data-projects/bin/python <research check above>
+PASS research: input sha, 3713 rows, 671 coordinate groups, 583 duplicate inputs+target, 11 swapped-coordinate rows in 2 groups, split 2230/740/743 rows and 402/134/135 groups, streetlight positive calibration sites 0
+facility 7 whole-snapshot count grid [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 15.0] values absent on train [15.0]
+facility 8 whole-snapshot count grid [0.0, 1.0, 2.0] values absent on train []
+facility 9 whole-snapshot count grid [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 11.0, 13.0, 20.0, 221.0] values absent on train [9.0, 13.0]
+PASS research: Original RF MAE 0.6653955 RMSE 1.2497794
+PASS research: Single PDP sum MAE 0.7210714 RMSE 1.2223784
+PASS research: Block PDP sum MAE 0.4722716 RMSE 0.8616936
+PASS research: Shape constraints MAE 0.4684504 RMSE 0.8608053
+PASS research: Final score MAE 0.4024771 RMSE 0.8024634
+research MAE decrease % 39.51309899996986
+PASS research: 17089 adjacent simulated comparisons; RF 1263, final 0 (threshold 1e-6).
+
+Final user-specified notebook revision supersedes the pre-edit research comparison above:
+Root changed facility shape-curve fitting from all input values to training-only values through Jupyter MCP and reran the public notebook top-to-bottom. Final MAE is 0.4025046427192477 and RMSE 0.8025477043804767. The 39.5% reduction and 1263 -> 0 reversals remain. Authoritative final results: docs/notebook-results/results.csv and docs/evidence/notebook-qa.json. The separate current-service leaf-parameter experiment in docs/model-analysis is unchanged.

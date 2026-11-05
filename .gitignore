@@ -26,3 +26,4 @@
 **/*.pyc
 **/*.log
 **/.basedpyright/
+**/.ipynb_checkpoints/

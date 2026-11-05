@@ -1,0 +1,111 @@
+{
+  "target": "safety_index (engineered rule_index, 0-100 points)",
+  "features": [
+    "lux",
+    "noise_db"
+  ],
+  "snapshot": "backend/data/training/environment_proxy.csv",
+  "snapshot_sha256": "d6db72725e6d8f1d7ffdd3d16111cdda040c3d7fd591461582e13f7c52004fbd",
+  "script_sha256": "94ecd34ae85be080afe08f558b3b14eb91e877dfb5975ba29a9844df210992c2",
+  "versions": {
+    "python": "3.12.13",
+    "sklearn": "1.9.1",
+    "numpy": "2.5.4"
+  },
+  "split": {
+    "method": "GroupShuffleSplit",
+    "group": "sensor_id",
+    "seed": 42,
+    "test_size": 0.2,
+    "rows": 3230,
+    "sensors": 652,
+    "train_rows": 2586,
+    "test_rows": 644,
+    "train_sensors": 521,
+    "test_sensors": 131,
+    "overlapping_sensors": 0
+  },
+  "train_target_median": 83.7706245,
+  "current_parameters": {
+    "bootstrap": true,
+    "ccp_alpha": 0.0,
+    "criterion": "squared_error",
+    "max_depth": 18,
+    "max_features": 1.0,
+    "max_leaf_nodes": null,
+    "max_samples": null,
+    "min_impurity_decrease": 0.0,
+    "min_samples_leaf": 3,
+    "min_samples_split": 2,
+    "min_weight_fraction_leaf": 0.0,
+    "monotonic_cst": null,
+    "n_estimators": 114,
+    "n_jobs": 1,
+    "oob_score": false,
+    "random_state": 42,
+    "verbose": 0,
+    "warm_start": false
+  },
+  "variant_override": {
+    "min_samples_leaf": 1
+  },
+  "delta_definition": "model minus current_leaf3",
+  "partial_dependence": {
+    "method": "brute",
+    "grid": "51 evenly spaced values between train p05 and p95",
+    "background": "all test rows, equally weighted",
+    "train_deciles": {
+      "lux": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        2.0,
+        6.0,
+        23.0
+      ],
+      "noise_db": [
+        37.0,
+        39.0,
+        41.0,
+        42.0,
+        43.0,
+        45.0,
+        46.0,
+        48.0,
+        52.0
+      ]
+    }
+  },
+  "metrics": [
+    {
+      "model": "train_median",
+      "mae": 7.946631094720497,
+      "rmse": 9.432333644607416,
+      "r2": -0.00012125219107583796,
+      "delta_mae": -0.33419052222076306,
+      "delta_rmse": -0.09850225292044534,
+      "delta_r2": 0.020997686085636014
+    },
+    {
+      "model": "current_leaf3",
+      "mae": 8.28082161694126,
+      "rmse": 9.530835897527862,
+      "r2": -0.02111893827671185,
+      "delta_mae": 0.0,
+      "delta_rmse": 0.0,
+      "delta_r2": 0.0
+    },
+    {
+      "model": "variant_leaf1",
+      "mae": 8.47244669971127,
+      "rmse": 9.758516535964684,
+      "r2": -0.07048836631401101,
+      "delta_mae": 0.19162508277000967,
+      "delta_rmse": 0.22768063843682285,
+      "delta_r2": -0.04936942803729916
+    }
+  ]
+}

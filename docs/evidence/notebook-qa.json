@@ -1,0 +1,113 @@
+{
+  "surface": "Jupyter MCP execute_cell top-to-bottom",
+  "python_executable": "/Users/yumin/miniforge3/envs/mcp-data-projects/bin/python",
+  "python_version": "3.11.15",
+  "kernel_restarted": false,
+  "notebooks": [
+    {
+      "notebook": "safenight-data-integration.ipynb",
+      "code_cells_executed": 5,
+      "sha256": "156a4ad179429104471943403f7975637171b90230ce8920a381ffb8c2173d36",
+      "errors": 0
+    },
+    {
+      "notebook": "safenight-pdp-score-research.ipynb",
+      "code_cells_executed": 7,
+      "sha256": "321cb19e52e2c2f8ac5bdb9f25a2545af2414d192f485756c29b654bb0ebe91a",
+      "errors": 0
+    }
+  ],
+  "versions": {
+    "numpy": "2.4.6",
+    "pandas": "3.0.3",
+    "scikit-learn": "1.9.0",
+    "scipy": "1.17.1",
+    "matplotlib": "3.11.0",
+    "nbformat": "5.10.4"
+  },
+  "research_input_sha256": "a1dc296a0a4723af2a1b32f187d18f271f29ddd2fd591d2be1bbddae8dcf74be",
+  "merge": {
+    "date": "2026-11-03",
+    "timezone": "Asia/Seoul",
+    "night_hours": [
+      0,
+      1,
+      2,
+      22,
+      23
+    ],
+    "grain": "sensor_id, time",
+    "rows": 3834,
+    "sensors": 947,
+    "sites": 947,
+    "radius_m": 25,
+    "unmatched_location_rows": 981,
+    "missing_facilities": [
+      "streetlights",
+      "security_lights"
+    ],
+    "cctv_reference": "legacy_2022_not_current",
+    "filter_rows": {
+      "정규화 관측": 24715,
+      "분석 날짜": 24715,
+      "야간 5개 시간대": 5233,
+      "필수값·위치 확보": 3834,
+      "국내 좌표 범위": 3834
+    },
+    "units": {
+      "lux": "lx",
+      "noise": "dB",
+      "distance": "m"
+    }
+  },
+  "research_metrics": [
+    {
+      "Method": "Original RF",
+      "MAE": 0.6653955136561667,
+      "RMSE": 1.249779429193904
+    },
+    {
+      "Method": "Single PDP sum",
+      "MAE": 0.7210714336543547,
+      "RMSE": 1.2223784442088113
+    },
+    {
+      "Method": "Block PDP sum",
+      "MAE": 0.4722716310299442,
+      "RMSE": 0.8616936460687551
+    },
+    {
+      "Method": "Shape constraints",
+      "MAE": 0.4687281334217126,
+      "RMSE": 0.8608689663017954
+    },
+    {
+      "Method": "Final score",
+      "MAE": 0.4025046427192477,
+      "RMSE": 0.8025477043804767
+    }
+  ],
+  "research_constraints": [
+    {
+      "Method": "Original RF",
+      "Comparisons": 17089,
+      "Reversals": 1263,
+      "Max increase": 1.4736609845704152,
+      "Post-cap change": 1.101681283047057
+    },
+    {
+      "Method": "Final score",
+      "Comparisons": 17089,
+      "Reversals": 0,
+      "Max increase": 0.0,
+      "Post-cap change": 0.0
+    }
+  ],
+  "changes": [
+    "train-only facility shape curves",
+    "source hashes",
+    "merge key and row validation",
+    "explicit missing facilities",
+    "relative paths in public copies"
+  ]
+}

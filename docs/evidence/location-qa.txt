@@ -225,4 +225,3 @@ EXIT 0
 $ (cd cloud && node --check scripts/sync-locations.mjs && node --check tests/location-sync.test.mjs && ./node_modules/.bin/eslint scripts/sync-locations.mjs tests/location-sync.test.mjs app/server/cloud/{contracts,store}.ts app/api/internal/collection/route.ts && ./node_modules/.bin/tsc --noEmit --incremental false)
 
 EXIT 0
-

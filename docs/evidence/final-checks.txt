@@ -310,19 +310,19 @@ computing gzip size...
 ✓ built in 226ms
 
   Route (app)
-  ┌ ? /                          
+  ┌ ? /
   ├ λ /api/assessments/:sensor_id
-  ├ λ /api/assessments/location  
-  ├ λ /api/context               
-  ├ λ /api/internal/collection   
-  ├ λ /api/internal/context      
-  ├ λ /api/internal/import       
-  ├ λ /api/internal/pipeline     
-  ├ λ /api/internal/population   
-  ├ λ /api/internal/raw          
-  ├ λ /api/map                   
-  ├ λ /api/places                
-  └ λ /api/population            
+  ├ λ /api/assessments/location
+  ├ λ /api/context
+  ├ λ /api/internal/collection
+  ├ λ /api/internal/context
+  ├ λ /api/internal/import
+  ├ λ /api/internal/pipeline
+  ├ λ /api/internal/population
+  ├ λ /api/internal/raw
+  ├ λ /api/map
+  ├ λ /api/places
+  └ λ /api/population
 
   λ API  ? Unknown
 

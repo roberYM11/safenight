@@ -1,0 +1,23 @@
+[
+  {
+    "file": "observations.csv",
+    "rows": 24715,
+    "source_file": "SDOT_정규화관측_위치결합_2026-11-03.csv",
+    "source_sha256": "48cf65465f9ef7c7df4c2fd091caf272f0e0882cf812474bf38c795329e5d20b",
+    "snapshot_sha256": "3ab126d5b471552a7d7dcaed2fcf85e387390a5b050037966ff98f44a86bbc8a"
+  },
+  {
+    "file": "locations.csv",
+    "rows": 1170,
+    "source_file": "센서위치_공식파일_2026-03-10.csv",
+    "source_sha256": "a503c18780db6c545f4743347ab3c6542ba265b8ac733ee5679dc4b153e6d533",
+    "snapshot_sha256": "c339f4c4ba73711ade5c3fdd9cb6616be88b4f61dc54d6708b87651318d40f19"
+  },
+  {
+    "file": "cctv_legacy.csv",
+    "rows": 59414,
+    "source_file": "CCTV_기존보관자료_2022_신규API아님.csv",
+    "source_sha256": "ed77622ffcfa09fe06d2de6ffef20f6b6a76c57ef1fead8ccbba2b4b1d01fe58",
+    "snapshot_sha256": "ddb6b0ff1ad37139ac7706cf5b3d90e8aae6ad7109294a84657ca40041afd71f"
+  }
+]
