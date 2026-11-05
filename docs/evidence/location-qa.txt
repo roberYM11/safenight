@@ -1,0 +1,228 @@
+Sensor location sync verification
+
+Local protected Worker routes, isolated Miniflare D1/R2, Python fixture workbooks generated and removed in test cleanup. Only network read was the official Seoul catalog HTML. No deployed Site or GitHub workflow was called.
+
+The assertions and test names in cloud/tests/location-sync.test.mjs define each observed binary outcome. Reuse an origin's existing protected writer token and optional Sites bypass secret.
+
+location fixture HTTP / D1 / R2, byte no-op, invalid source, interrupted jobs, same-day revisions, legacy job
+$ (cd cloud && node --test tests/location-sync.test.mjs)
+✔ rejects missing and ambiguous provider workbook selectors (1.943167ms)
+▶ normalizes workbooks and publishes through the actual protected Worker routes, D1 and R2
+  ✔ keeps the interrupted 200-row first page private (156.091542ms)
+  ✔ resumes only the last page with the original provider date (112.151292ms)
+  ✔ performs no raw or import write for identical bytes across independent runs (90.5305ms)
+  ✔ rejects HTML and an XLSX with invalid Korean coordinates before any cloud request (160.332916ms)
+  ✔ publishes a same-day correction and a later reversion as separate revisions (253.032459ms)
+  ✔ keeps changed bytes out of a partial job and supersedes it once idle (291.982459ms)
+  ✔ recognizes a previously completed migration with an ordinary UUID job id (124.5775ms)
+✔ normalizes workbooks and publishes through the actual protected Worker routes, D1 and R2 (1824.445792ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2038.592875
+EXIT 0
+
+existing cloud collection/import regressions
+$ (cd cloud && node --test tests/cloud-client.test.mjs tests/cloud-jobs.test.mjs tests/cloud-store.test.mjs)
+{"event":"backup_uploaded","sha":"a0565b5803a096895efe4b184a1ea75383a96cfa425c93fb250fbe0d91136efc","bytes":18}
+{"event":"raw_uploaded","count":3}
+{"event":"import_start","job_id":"job-sensor_locations","source":"sensor_locations","day":"2026-11-03","status":"pending","next_page":1,"fetched_rows":0,"inserted_rows":0}
+{"event":"import","job_id":"job-sensor_locations","source":"sensor_locations","day":"2026-11-03","status":"succeeded","next_page":2,"fetched_rows":1,"inserted_rows":1}
+{"event":"import_start","job_id":"job-sdot","source":"sdot","day":"2026-11-03","status":"pending","next_page":1,"fetched_rows":0,"inserted_rows":0}
+{"event":"import","job_id":"job-sdot","source":"sdot","day":"2026-11-03","status":"succeeded","next_page":2,"fetched_rows":1,"inserted_rows":1}
+{"event":"raw_uploaded","count":3}
+✔ imports backups and raw bytes before positions and S-DoT, then resumes without duplicate writes (45.369917ms)
+✔ refuses a manifest path escaping the export directory before any upload (9.046167ms)
+{"event":"raw_uploaded","count":0}
+{"event":"import_start","job_id":"job-sdot","source":"sdot","day":"2026-11-03","status":"running","next_page":2,"fetched_rows":1,"inserted_rows":1}
+{"event":"start","job_id":"job-sdot","source":"sdot","day":"2026-11-03","status":"running","next_page":1,"fetched_rows":0,"inserted_rows":0}
+✔ finalizes a fully staged running import on resume without resubmitting observations (4.971042ms)
+✔ does not retry an unauthorized write or expose response data (0.692ms)
+✔ reports a deferred due plan instead of claiming successful collection (0.815208ms)
+✔ stops a nonterminal collect job at its configured step budget (0.480292ms)
+✔ stages one page without exposing partial results (6.970041ms)
+✔ resumes from a durable cursor and publishes only the final page (0.947583ms)
+✔ archives a malformed response before recording a failed job (0.498833ms)
+✔ does not request a page while another caller holds its lease (0.06725ms)
+✔ reads the current durable cursor after winning a later lease (0.640209ms)
+✔ rejects total-count drift after retaining the raw response (0.243875ms)
+✔ rethrows programming failures while releasing the lease (0.250375ms)
+✔ does not repeat source work for an already successful job (0.048042ms)
+✔ switches the latest eligible Korean day at the configured collection hour (0.186458ms)
+✔ includes the previous full day at Korean03:00 (0.089625ms)
+✔ plans missing checkpoint days in order before correction rechecks (0.066ms)
+✔ does not silently skip a gap beyond the source retention window (0.050959ms)
+✔ resumes a pending job instead of planning a parallel source window (0.059416ms)
+✔ defers retries for fifteen minutes after a provider failure (0.037875ms)
+✔ skips correction days already successfully collected on the current Korean day (0.061083ms)
+✔ does not count bootstrap imports as a successful cloud correction run (0.04875ms)
+✔ publishes 1-row staged D1 window after an interrupted final step without another source request (378.962792ms)
+✔ publishes 0-row staged D1 window after an interrupted final step without another source request (270.676416ms)
+✔ collects two HTTP-shaped pages through real D1/R2 and publishes after resume (450.220125ms)
+✔ retains real R2 malformed bytes while failing the D1 job without publication (209.464625ms)
+✔ fails repeated source pages through real D1 without exposing the staged day (346.024167ms)
+✔ records system visibility after the provider response instead of at request start (242.415417ms)
+✔ archives exact bytes in actual R2 and deduplicates repeated content (265.939416ms)
+✔ keeps staged observations private until the final atomic publish (279.45625ms)
+✔ finalizes a fully staged import after its interrupted worker lease expires (275.655042ms)
+✔ returns the completed import unchanged when finalization is retried (244.019666ms)
+✔ resolves the latest sensor measurement with the location effective at that time (347.986125ms)
+✔ deduplicates an imported record and its later recollection without losing legacy lineage (291.549625ms)
+✔ keeps searchable district names from actual S-DoT fields when location payloads only contain coordinates (272.288583ms)
+✔ selects a higher-rank correction while retaining the original revision (275.180333ms)
+✔ refuses an ambiguous same-priority value without publishing partial changes (230.825875ms)
+✔ uses a newer source update timestamp at the same rank (228.763792ms)
+✔ blocks a competing source job and allows lease takeover only after expiry (156.216042ms)
+✔ rolls back the entire D1 batch when ownership changes immediately before stage commit (167.866292ms)
+✔ counts duplicate source rows but stores only one logical revision and safely replays the page (183.123125ms)
+✔ rejects repeated nonempty pages instead of treating them as complete coverage (215.88375ms)
+✔ does not advance the checkpoint across an uncollected day (179.582ms)
+✔ keeps raw bytes and failed history while permitting a new attempt (172.013708ms)
+{"fixture":"synthetic-25000-row-day","publish_ms":353}
+✔ publishes a full day of25000 revisions and keeps latest reads at sensor grain (4825.609542ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 45
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8869.157
+EXIT 0
+
+existing location parser fixtures
+$ (cd backend && .venv/bin/pytest -q tests/test_adapters.py -k location)
+..                                                                       [100%]
+2 passed, 17 deselected in 0.16s
+EXIT 0
+
+JavaScript syntax and lint
+$ (cd cloud && node --check scripts/sync-locations.mjs && node --check tests/location-sync.test.mjs && ./node_modules/.bin/eslint scripts/sync-locations.mjs tests/location-sync.test.mjs app/server/cloud/{contracts,store}.ts app/api/internal/collection/route.ts)
+
+EXIT 0
+
+project TypeScript check
+$ (cd cloud && ./node_modules/.bin/tsc --noEmit --incremental false)
+
+EXIT 0
+
+Python adapter lint/types
+$ (cd backend && .venv/bin/ruff check scripts/prepare_locations.py && .venv/bin/basedpyright scripts/prepare_locations.py)
+All checks passed!
+0 errors, 0 warnings, 0 notes
+EXIT 0
+
+official Seoul catalog / discovered XLSX selector and date
+$ (cd cloud && set -o pipefail; curl -fsS --max-time 20 'https://data.seoul.go.kr/dataList/OA-22833/A/1/datasetView.do' | node --input-type=module -e "import{discoverWorkbook} from './scripts/sync-locations.mjs';let html=''; for await(const c of process.stdin) html+=c; console.log(JSON.stringify(discoverWorkbook(html)));" )
+{"seq":"20260310","day":"2026-03-10"}
+EXIT 0
+
+existing cached official workbook / validated rows and SHA
+$ (cd backend && set -o pipefail; shasum -a 256 var/sensor_locations.xlsx; .venv/bin/python scripts/prepare_locations.py < var/sensor_locations.xlsx | .venv/bin/python -c 'import json,sys; a=json.load(sys.stdin); print("normalized records:",len(a),"distinct sensors:",len({x["sensor_id"] for x in a})); assert len(a)==1170')
+ae8246f93d8f685b6f6e54630e47b59a28958ff4d510cd0dc17e0b8089f8d7c3  var/sensor_locations.xlsx
+normalized records: 1170 distinct sensors: 1170
+EXIT 0
+
+workflow syntax, schedule, dispatch, entry point
+$ (cd cloud && node --input-type=module -e "import y from 'js-yaml'; import fs from 'node:fs'; import assert from 'node:assert/strict'; const w=y.load(fs.readFileSync('../.github/workflows/sync-locations.yml','utf8')); assert.equal(w.on.schedule[0].cron,'45 17 * * *'); assert.ok('workflow_dispatch' in w.on); assert.equal(w.jobs.sync.steps.at(-1).run,'node scripts/sync-locations.mjs'); console.log('manual + daily 02:45 KST; workflow entry point verified');")
+manual + daily 02:45 KST; workflow entry point verified
+EXIT 0
+
+Final rerun after isolating the sync_locations command so an older deployed API cannot accidentally start an ordinary import.
+
+$ (cd cloud && node --test tests/location-sync.test.mjs)
+✔ rejects missing and ambiguous provider workbook selectors (1.539875ms)
+▶ normalizes workbooks and publishes through the actual protected Worker routes, D1 and R2
+  ✔ keeps the interrupted 200-row first page private (148.094584ms)
+  ✔ resumes only the last page with the original provider date (107.385959ms)
+  ✔ performs no raw or import write for identical bytes across independent runs (91.739083ms)
+  ✔ rejects HTML and an XLSX with invalid Korean coordinates before any cloud request (161.875041ms)
+  ✔ publishes a same-day correction and a later reversion as separate revisions (257.557709ms)
+  ✔ keeps changed bytes out of a partial job and supersedes it once idle (286.679417ms)
+  ✔ recognizes a previously completed migration with an ordinary UUID job id (117.229583ms)
+✔ normalizes workbooks and publishes through the actual protected Worker routes, D1 and R2 (1733.271917ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1918.14
+EXIT 0
+
+$ (cd cloud && node --test tests/cloud-client.test.mjs tests/cloud-jobs.test.mjs tests/cloud-store.test.mjs)
+{"event":"backup_uploaded","sha":"a0565b5803a096895efe4b184a1ea75383a96cfa425c93fb250fbe0d91136efc","bytes":18}
+{"event":"raw_uploaded","count":3}
+{"event":"import_start","job_id":"job-sensor_locations","source":"sensor_locations","day":"2026-11-03","status":"pending","next_page":1,"fetched_rows":0,"inserted_rows":0}
+{"event":"import","job_id":"job-sensor_locations","source":"sensor_locations","day":"2026-11-03","status":"succeeded","next_page":2,"fetched_rows":1,"inserted_rows":1}
+{"event":"import_start","job_id":"job-sdot","source":"sdot","day":"2026-11-03","status":"pending","next_page":1,"fetched_rows":0,"inserted_rows":0}
+{"event":"import","job_id":"job-sdot","source":"sdot","day":"2026-11-03","status":"succeeded","next_page":2,"fetched_rows":1,"inserted_rows":1}
+{"event":"raw_uploaded","count":3}
+✔ imports backups and raw bytes before positions and S-DoT, then resumes without duplicate writes (19.052125ms)
+✔ refuses a manifest path escaping the export directory before any upload (1.6645ms)
+{"event":"raw_uploaded","count":0}
+{"event":"import_start","job_id":"job-sdot","source":"sdot","day":"2026-11-03","status":"running","next_page":2,"fetched_rows":1,"inserted_rows":1}
+{"event":"start","job_id":"job-sdot","source":"sdot","day":"2026-11-03","status":"running","next_page":1,"fetched_rows":0,"inserted_rows":0}
+✔ finalizes a fully staged running import on resume without resubmitting observations (2.500416ms)
+✔ does not retry an unauthorized write or expose response data (0.495084ms)
+✔ reports a deferred due plan instead of claiming successful collection (0.69325ms)
+✔ stops a nonterminal collect job at its configured step budget (0.379959ms)
+✔ stages one page without exposing partial results (6.581709ms)
+✔ resumes from a durable cursor and publishes only the final page (0.57825ms)
+✔ archives a malformed response before recording a failed job (0.441917ms)
+✔ does not request a page while another caller holds its lease (0.065166ms)
+✔ reads the current durable cursor after winning a later lease (0.565541ms)
+✔ rejects total-count drift after retaining the raw response (0.269292ms)
+✔ rethrows programming failures while releasing the lease (0.210417ms)
+✔ does not repeat source work for an already successful job (0.048583ms)
+✔ switches the latest eligible Korean day at the configured collection hour (0.16125ms)
+✔ includes the previous full day at Korean03:00 (0.093791ms)
+✔ plans missing checkpoint days in order before correction rechecks (0.059584ms)
+✔ does not silently skip a gap beyond the source retention window (0.041584ms)
+✔ resumes a pending job instead of planning a parallel source window (0.052625ms)
+✔ defers retries for fifteen minutes after a provider failure (0.036459ms)
+✔ skips correction days already successfully collected on the current Korean day (0.058333ms)
+✔ does not count bootstrap imports as a successful cloud correction run (0.046459ms)
+✔ publishes 1-row staged D1 window after an interrupted final step without another source request (293.873375ms)
+✔ publishes 0-row staged D1 window after an interrupted final step without another source request (248.376334ms)
+✔ collects two HTTP-shaped pages through real D1/R2 and publishes after resume (437.086833ms)
+✔ retains real R2 malformed bytes while failing the D1 job without publication (211.798041ms)
+✔ fails repeated source pages through real D1 without exposing the staged day (335.419584ms)
+✔ records system visibility after the provider response instead of at request start (239.117292ms)
+✔ archives exact bytes in actual R2 and deduplicates repeated content (207.248792ms)
+✔ keeps staged observations private until the final atomic publish (250.685208ms)
+✔ finalizes a fully staged import after its interrupted worker lease expires (247.178792ms)
+✔ returns the completed import unchanged when finalization is retried (243.117125ms)
+✔ resolves the latest sensor measurement with the location effective at that time (346.093ms)
+✔ deduplicates an imported record and its later recollection without losing legacy lineage (277.578834ms)
+✔ keeps searchable district names from actual S-DoT fields when location payloads only contain coordinates (267.933542ms)
+✔ selects a higher-rank correction while retaining the original revision (258.222ms)
+✔ refuses an ambiguous same-priority value without publishing partial changes (247.7385ms)
+✔ uses a newer source update timestamp at the same rank (247.928084ms)
+✔ blocks a competing source job and allows lease takeover only after expiry (172.306125ms)
+✔ rolls back the entire D1 batch when ownership changes immediately before stage commit (180.828ms)
+✔ counts duplicate source rows but stores only one logical revision and safely replays the page (188.193833ms)
+✔ rejects repeated nonempty pages instead of treating them as complete coverage (189.874416ms)
+✔ does not advance the checkpoint across an uncollected day (177.138375ms)
+✔ keeps raw bytes and failed history while permitting a new attempt (162.627166ms)
+{"fixture":"synthetic-25000-row-day","publish_ms":360}
+✔ publishes a full day of25000 revisions and keeps latest reads at sensor grain (4802.598834ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 45
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8682.571334
+EXIT 0
+
+$ (cd cloud && node --check scripts/sync-locations.mjs && node --check tests/location-sync.test.mjs && ./node_modules/.bin/eslint scripts/sync-locations.mjs tests/location-sync.test.mjs app/server/cloud/{contracts,store}.ts app/api/internal/collection/route.ts && ./node_modules/.bin/tsc --noEmit --incremental false)
+
+EXIT 0
+

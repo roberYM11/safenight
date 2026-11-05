@@ -19,7 +19,7 @@ export type CloudRecord = z.infer<typeof cloudRecordSchema>;
 export type ProviderQuery = { readonly source:'sdot'; readonly day:string; readonly page_no:number; readonly page_size:number; readonly full_snapshot:false };
 export type SourceKeys = { readonly sdot:string };
 export type ParsedPage = { readonly records:readonly ProviderRecord[]; readonly total_count:number; readonly page_no:number; readonly page_size:number };
-export type JobRequest = { readonly source:Source; readonly day:string; readonly kind:'collect'|'import'; readonly expected_count?:number };
+export type JobRequest = { readonly source:Source; readonly day:string; readonly kind:'collect'|'import'; readonly expected_count?:number; readonly location_sha256?:string };
 export type CollectionJob = { readonly id:string; readonly source:Source; readonly day:string; readonly kind:'collect'|'import'; readonly status:'pending'|'running'|'succeeded'|'failed'; readonly page_no:number; readonly page_size:number; readonly total_count:number|null; readonly fetched_rows:number; readonly inserted_rows:number; readonly error_code:string|null; readonly created_at:string; readonly updated_at:string; readonly finished_at:string|null };
 export type StagedPage = { readonly records:readonly CloudRecord[]; readonly total_count:number; readonly page_no:number; readonly page_size:number };
 

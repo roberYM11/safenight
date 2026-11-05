@@ -1,0 +1,42 @@
+✔ rejects missing and ambiguous provider workbook selectors (1.495208ms)
+▶ normalizes workbooks and publishes through the actual protected Worker routes, D1 and R2
+  ✔ keeps the interrupted 200-row first page private (136.615583ms)
+  ✔ resumes only the last page with the original provider date (98.799875ms)
+  ✔ performs no raw or import write for identical bytes across independent runs (85.515958ms)
+  ✔ rejects HTML and an XLSX with invalid Korean coordinates before any cloud request (148.574042ms)
+  ✔ publishes a same-day correction and a later reversion as separate revisions (233.689375ms)
+  ✔ keeps changed bytes out of a partial job and supersedes it once idle (262.270958ms)
+  ✔ recognizes a previously completed migration with an ordinary UUID job id (112.672917ms)
+✔ normalizes workbooks and publishes through the actual protected Worker routes, D1 and R2 (1590.824333ms)
+✔ stores exact upstream bytes and a normalized observation and reuses the published cache on retry (294.087666ms)
+ℹ {"attempt":1,"http":200,"body":{"areas":[{"area_code":"POI001","status":"ok"}],"total":121,"next_cursor":1}}
+ℹ {"attempt":2,"http":200,"body":{"areas":[{"area_code":"POI001","status":"ok"}],"total":121,"next_cursor":1}}
+ℹ {"area":"POI001","minimum":120,"maximum":180,"r2_key":"population/raw/1fe489cee23643e85f3636462e99327909d407782fcbbcdb2e0b50c65cb05580","upstream_calls":1,"joined_d1_rows":1}
+✔ rejects unauthorized, malformed, out-of-roster, oversized and coordinate-bearing commands before writes (223.979542ms)
+ℹ {"http":401,"body":{"error":"unauthorized"}}
+ℹ {"http":400,"body":{"error":"invalid_json"}}
+ℹ {"http":400,"body":{"error":"invalid_population_command"}}
+ℹ {"http":400,"body":{"error":"invalid_population_command"}}
+ℹ {"http":400,"body":{"error":"invalid_population_command"}}
+ℹ {"http":400,"body":{"error":"invalid_population_command"}}
+ℹ {"http":413,"body":{"error":"request_too_large"}}
+✔ invalid refresh archives rejected bytes, retains the prior cache, and lease backoff prevents a second source call (229.274208ms)
+ℹ {"http":200,"body":{"areas":[{"area_code":"POI001","status":"failed","reason":"invalid_source_payload"}],"total":121,"next_cursor":1}}
+ℹ {"http":200,"body":{"areas":[{"area_code":"POI001","status":"failed","reason":"request_throttled"}],"total":121,"next_cursor":1}}
+✔ concurrent cold requests share one D1 lease and one upstream request (217.650875ms)
+ℹ {"requests":3,"outcomes":["ok","failed","failed"],"upstream_calls":1}
+✔ lease storage faults return a retryable HTTP failure without contacting the upstream (190.625291ms)
+ℹ {"http":503,"body":{"error":"population_collection_unavailable"},"upstream_calls":0}
+{"event":"population_area_failed","area_code":"POI001","status":"failed","reason":"source_unavailable"}
+✔ scheduled client completes all published areas through Worker HTTP and never succeeds with a failed area (596.572583ms)
+ℹ {"attempted":121,"published":120,"failed":"POI001"}
+✔ scheduled client verifies the complete published roster and rejects premature completion (529.378208ms)
+ℹ {"status":"complete","areas":121}
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2475.717542

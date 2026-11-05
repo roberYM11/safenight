@@ -1,0 +1,66 @@
+Pre-change baseline: existing parser, GIS, cache, lease and storage semantics must survive scheduled collection.
+cd cloud && node --test tests/population.test.mjs tests/population-store.test.mjs
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2319.244959
+
+Miniflare Worker HTTP, D1 and R2 integration, isolated fixtures, no live Seoul calls
+cd cloud && node --test tests/population-collection.test.mjs
+✔ stores exact upstream bytes and a normalized observation and reuses the published cache on retry (319.942041ms)
+ℹ {"attempt":1,"http":200,"body":{"areas":[{"area_code":"POI001","status":"ok"}],"total":121,"next_cursor":1}}
+ℹ {"attempt":2,"http":200,"body":{"areas":[{"area_code":"POI001","status":"ok"}],"total":121,"next_cursor":1}}
+ℹ {"area":"POI001","minimum":120,"maximum":180,"r2_key":"population/raw/1fe489cee23643e85f3636462e99327909d407782fcbbcdb2e0b50c65cb05580","upstream_calls":1,"joined_d1_rows":1}
+✔ rejects unauthorized, malformed, out-of-roster, oversized and coordinate-bearing commands before writes (235.0695ms)
+ℹ {"http":401,"body":{"error":"unauthorized"}}
+ℹ {"http":400,"body":{"error":"invalid_json"}}
+ℹ {"http":400,"body":{"error":"invalid_population_command"}}
+ℹ {"http":400,"body":{"error":"invalid_population_command"}}
+ℹ {"http":400,"body":{"error":"invalid_population_command"}}
+ℹ {"http":400,"body":{"error":"invalid_population_command"}}
+ℹ {"http":413,"body":{"error":"request_too_large"}}
+✔ invalid refresh archives rejected bytes, retains the prior cache, and lease backoff prevents a second source call (247.380375ms)
+ℹ {"http":200,"body":{"areas":[{"area_code":"POI001","status":"failed","reason":"invalid_source_payload"}],"total":121,"next_cursor":1}}
+ℹ {"http":200,"body":{"areas":[{"area_code":"POI001","status":"failed","reason":"request_throttled"}],"total":121,"next_cursor":1}}
+✔ concurrent cold requests share one D1 lease and one upstream request (224.68725ms)
+ℹ {"requests":3,"outcomes":["ok","failed","failed"],"upstream_calls":1}
+✔ lease storage faults return a retryable HTTP failure without contacting the upstream (207.932542ms)
+ℹ {"http":503,"body":{"error":"population_collection_unavailable"},"upstream_calls":0}
+{"event":"population_area_failed","area_code":"POI001","status":"failed","reason":"source_unavailable"}
+✔ scheduled client completes all published areas through Worker HTTP and never succeeds with a failed area (645.097375ms)
+ℹ {"attempted":121,"published":120,"failed":"POI001"}
+✔ scheduled client verifies the complete published roster and rejects premature completion (570.361958ms)
+ℹ {"status":"complete","areas":121}
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2645.16975
+
+Regression coverage
+cd cloud && node --test tests/population.test.mjs tests/population-store.test.mjs tests/pipeline-client.test.mjs
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2266.2365
+
+cd cloud && npx tsc --noEmit --tsBuildInfoFile "$TMPDIR/types.tsbuildinfo"
+Exit 0; no diagnostics.
+
+Scheduled workflow configuration (local js-yaml load; assert schedule, enabled gate and actual CLI step)
+{"cron":"17 */4 * * *","run":"node scripts/pipeline-client.mjs population","enabled_if":"vars.SAFENIGHT_PIPELINE_ENABLED == 'true'"}
+
+Verification scope: local Workers runtime executes the route handler bundled with esbuild, authenticates each HTTP request, applies SQL migrations to Miniflare D1 and writes exact fixture bytes to Miniflare R2. Test exits await disposal. GitHub Actions schedule and production credentials were not exercised.
+
+Cleanup receipt: /tmp/safenight-population.wCwFFF30 removed; per-run TMPDIR, Node and Bun caches removed. Every owned test child exited; no local server started independently.

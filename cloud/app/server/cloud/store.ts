@@ -17,12 +17,47 @@ export class CloudStore {
     dayWindow(request.day);
     if (request.kind==='collect' && request.source!=='sdot') throw new CloudStoreError('invalid_request');
     if (request.kind==='import' && (request.expected_count===undefined || !Number.isSafeInteger(request.expected_count) || request.expected_count<0)) throw new CloudStoreError('invalid_request');
-    const id=crypto.randomUUID();
+    const digest=request.location_sha256;
+    let id:string=crypto.randomUUID();
+    if (digest!==undefined) {
+      if (request.source!=='sensor_locations' || request.kind!=='import' || !request.expected_count || !/^[a-f0-9]{64}$/.test(digest)) throw new CloudStoreError('invalid_request');
+      const latest=await this.db.prepare(`SELECT id,day,total_count,rowid AS generation FROM collection_jobs
+        WHERE source='sensor_locations' AND status='succeeded' ORDER BY finished_at DESC,rowid DESC LIMIT 1`)
+        .first<{id:string;day:string;total_count:number;generation:number}>();
+      if (latest && latest.day>request.day) throw new CloudStoreError('invalid_request');
+      id=`loc:${digest}:${request.day}:${latest?.generation??0}`;
+      // A vanished upstream file must not strand an unfinished download. Keep its staged
+      // history private and permit the next snapshot after the last worker's lease expires.
+      await this.db.prepare(`UPDATE collection_jobs SET status='failed',error_code='location_snapshot_superseded',
+        finished_at=?,updated_at=?,lease_token=NULL,lease_until=NULL WHERE source='sensor_locations'
+        AND status IN ('pending','running') AND id LIKE 'loc:%' AND id<>? AND updated_at<=?
+        AND (lease_until IS NULL OR lease_until<=?)`)
+        .bind(now.toISOString(),now.toISOString(),id,new Date(now.getTime()-60_000).toISOString(),now.toISOString()).run();
+      if (latest && latest.day===request.day && latest.total_count===request.expected_count) {
+        const counts=await this.db.prepare(`SELECT COUNT(*) AS total,COUNT(CASE WHEN r.raw_sha=? THEN 1 END) AS matching
+          FROM job_revisions jr JOIN observation_revisions r ON r.id=jr.revision_id WHERE jr.job_id=?`)
+          .bind(digest,latest.id).first<{total:number;matching:number}>();
+        if (counts?.total===request.expected_count && counts.matching===counts.total) {
+          const previous=await this.get(latest.id);
+          if (previous) {
+            const active=await this.db.prepare("SELECT 1 FROM collection_jobs WHERE source='sensor_locations' AND status IN ('pending','running') LIMIT 1").first();
+            if (active) throw new CloudStoreError('source_busy');
+            return previous;
+          }
+        }
+      }
+    }
     const stamp=now.toISOString();
     await this.db.prepare(`INSERT INTO collection_jobs(id,source,day,kind,status,page_no,page_size,total_count,fetched_rows,inserted_rows,error_code,created_at,updated_at,finished_at,lease_token,lease_until) VALUES(?,?,?,?,'pending',1,200,?,0,0,NULL,?,?,NULL,NULL,NULL) ON CONFLICT DO NOTHING`).bind(id,request.source,request.day,request.kind,request.expected_count??null,stamp,stamp).run();
+    if (digest!==undefined) {
+      // A cancelled partial snapshot may return before its replacement publishes.
+      await this.db.prepare(`UPDATE OR IGNORE collection_jobs SET status='pending',error_code=NULL,finished_at=NULL,updated_at=?
+        WHERE id=? AND status='failed' AND error_code='location_snapshot_superseded'`).bind(stamp,id).run();
+    }
     const row=await this.db.prepare(`SELECT * FROM collection_jobs WHERE source=? AND status IN ('pending','running')`).bind(request.source).first();
     if (!row) throw new CloudStoreError('source_busy');
     const job=jobSchema.parse(row);
+    if ((job.id.startsWith('loc:') || digest!==undefined) && job.id!==id) throw new CloudStoreError('source_busy');
     if (job.day!==request.day || job.kind!==request.kind || (request.expected_count!==undefined && job.total_count!==request.expected_count)) throw new CloudStoreError('source_busy');
     return job;
   }
@@ -62,6 +97,7 @@ export class CloudStore {
     if (page.records.length && await this.db.prepare('SELECT 1 FROM job_pages WHERE job_id=? AND page_hash=? LIMIT 1').bind(id,fingerprint).first()) throw new CloudStoreError('repeated_page');
     const window=dayWindow(job.day);
     for (const record of page.records) {
+      if (job.id.startsWith('loc:') && !job.id.startsWith(`loc:${record.raw_sha}:`)) throw new CloudStoreError('record_source_mismatch');
       if (record.source!==job.source) throw new CloudStoreError('record_source_mismatch');
       if (record.observed_at<window.start || record.observed_at>=window.end) throw new CloudStoreError('record_outside_window');
     }

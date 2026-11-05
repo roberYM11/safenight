@@ -5,6 +5,7 @@ import boundaryData from './data/population-areas.json' with { type: 'json' };
 const pair = z.tuple([z.number().finite(), z.number().finite()]).readonly();
 const areaSchema = z.object({ code: z.string().regex(/^POI\d{3}$/), name: z.string().min(1), category: z.string(), bbox: z.tuple([z.number(), z.number(), z.number(), z.number()]).readonly(), rings: z.array(z.array(pair).min(4).readonly()).min(1).readonly() }).readonly();
 const boundaries = z.object({ source_url: z.url(), source_published_at: z.string().nullable(), areas: z.array(areaSchema).min(1).max(300).readonly() }).parse(boundaryData);
+export const publishedPopulationAreas = boundaries.areas;
 export type PopulationArea = z.infer<typeof areaSchema>;
 export type PopulationPoint = { readonly lat: number; readonly lon: number };
 const coordinate = z.string().trim().regex(/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/).transform(Number).pipe(z.number().finite());
@@ -145,23 +146,39 @@ export class PopulationService {
   async at(point: PopulationPoint, apiKey: string): Promise<PopulationResult> {
     const match = matchPopulationArea(point, this.areas);
     if (!match) return unavailable(null, 'outside_published_areas', null);
-    const { area } = match;
+    const { stored, previous } = await this.lookup(match.area, apiKey);
+    const now = this.now();
+    switch (stored.kind) {
+      case 'observation': return related(populationResult(stored.value, now), match);
+      case 'failure': return related(previous ? { ...populationResult(previous, now), status: 'STALE', reason: 'last_successful_observation', note: '새 인구 자료 조회에 실패해 DB에 보존된 지난 집계를 표시합니다. 현재 인구로 사용하지 않습니다.' } : unavailable(stored.value.area, stored.value.reason, stored.value.fetched_at), match);
+      default: return unreachable(stored);
+    }
+  }
+
+  async collect(area: PopulationArea, apiKey: string) {
+    const { stored } = await this.lookup(area, apiKey);
+    switch (stored.kind) {
+      case 'observation': return { area_code: area.code, status: 'ok' as const };
+      case 'failure': return { area_code: area.code, status: 'failed' as const, reason: stored.value.reason };
+      default: return unreachable(stored);
+    }
+  }
+
+  private async lookup(area: PopulationArea, apiKey: string): Promise<{ readonly stored: StoredPopulation; readonly previous: PopulationObservation | null }> {
     const now = this.now();
     let previous: PopulationObservation | null = null;
     if (this.store) {
       try {
         const snapshot = await this.store.read(area.code, now);
-        if (snapshot?.fresh) return related(populationResult({ ...snapshot.record, fetched_at: snapshot.retrieved_at }, now), match);
         previous = snapshot ? { ...snapshot.record, fetched_at: snapshot.retrieved_at } : null;
-      } catch { return related(unavailable(areaLabel(area), 'population_storage_unavailable', now.toISOString()), match); }
+        if (snapshot?.fresh && previous) return { stored: { kind: 'observation', value: previous }, previous };
+      } catch {
+        return { stored: { kind: 'failure', value: { area: areaLabel(area), reason: 'population_storage_unavailable', fetched_at: now.toISOString() } }, previous };
+      }
     }
     const cached = this.cache.get(area.code);
     const stored = cached && cached.expires > now.getTime() ? cached.value : await (this.inFlight.get(area.code) ?? this.start(area, apiKey));
-    switch (stored.kind) {
-      case 'observation': return related(populationResult(stored.value, this.now()), match);
-      case 'failure': return related(previous ? { ...populationResult(previous, now), status: 'STALE', reason: 'last_successful_observation', note: '새 인구 자료 조회에 실패해 DB에 보존된 지난 집계를 표시합니다. 현재 인구로 사용하지 않습니다.' } : unavailable(stored.value.area, stored.value.reason, stored.value.fetched_at), match);
-      default: return unreachable(stored);
-    }
+    return { stored, previous };
   }
 
   private start(area: PopulationArea, apiKey: string): Promise<StoredPopulation> {
@@ -176,7 +193,7 @@ export class PopulationService {
     const token = this.store?.acquire ? await this.store.acquire(area.code, this.now()) : undefined;
     if (token === null) {
       const current = await this.store?.read(area.code, this.now());
-      return current ? { kind: 'observation', value: current.record }
+      return current?.fresh ? { kind: 'observation', value: { ...current.record, fetched_at: current.retrieved_at } }
         : { kind: 'failure', value: { area: areaLabel(area), reason: 'request_throttled', fetched_at } };
     }
     try {

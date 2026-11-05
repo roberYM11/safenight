@@ -19,6 +19,7 @@ const command=z.discriminatedUnion('action',[
   z.object({action:z.literal('step'),job_id:z.string().min(1).max(100)}),
   z.object({action:z.literal('finalize'),job_id:z.string().min(1).max(100)}),
   z.object({action:z.literal('start'),source:sourceSchema,day,kind:z.enum(['collect','import']).default('collect'),expected_count:z.number().int().nonnegative().max(500000).optional()}),
+  z.object({action:z.literal('sync_locations'),day,expected_count:z.number().int().positive().max(500000),location_sha256:z.string().regex(/^[a-f0-9]{64}$/)}),
 ]);
 const headers={'Cache-Control':'no-store'};
 function failure(error:unknown):Response {
@@ -33,7 +34,7 @@ export async function GET(request:Request) {
   try {
     const jobId=new URL(request.url).searchParams.get('job_id');
     if(jobId)return Response.json(await cloudStore().get(jobId),{headers});
-    return Response.json({...(await cloudStore().overview()),protocol:{source:'sdot',writer:'/api/internal/collection',actions:['due','step','start'],step_limit:'one_page_200_rows',clock:'Asia/Seoul',collection_hour:3,correction_days:7,instructions:'/CLOUD_OPERATIONS.md'}},{headers});
+    return Response.json({...(await cloudStore().overview()),protocol:{source:'sdot',writer:'/api/internal/collection',actions:['due','step','start','sync_locations'],step_limit:'one_page_200_rows',clock:'Asia/Seoul',collection_hour:3,correction_days:7,instructions:'/CLOUD_OPERATIONS.md'}},{headers});
   } catch(error) {return failure(error);}
 }
 export async function POST(request:Request) {
@@ -49,6 +50,8 @@ export async function POST(request:Request) {
         if(parsed.data.kind==='collect'&&(parsed.data.source!=='sdot'||parsed.data.day>yesterday))return Response.json({error:'completed_sdot_day_required'},{status:400,headers});
         return Response.json(await store.start({source:parsed.data.source,day:parsed.data.day,kind:parsed.data.kind,...(parsed.data.expected_count===undefined?{}:{expected_count:parsed.data.expected_count})},now),{headers});
       }
+      case 'sync_locations':return Response.json(await store.start({source:'sensor_locations',kind:'import',day:parsed.data.day,
+        expected_count:parsed.data.expected_count,location_sha256:parsed.data.location_sha256},now),{headers});
       case 'step':return Response.json(await step(store,parsed.data.job_id,keys,now,requestPage,()=>new Date()),{headers});
       case 'finalize':return Response.json(await finalizeJob(store,parsed.data.job_id,now),{headers});
       case 'probe': {

@@ -61,15 +61,15 @@ jobs:
           cache: npm
           cache-dependency-path: cloud/package-lock.json
       - run: npm ci
-      - run: npx tsc --noEmit
-      - run: node --test tests/*.test.mjs
-      - run: npm run build
       - uses: astral-sh/setup-uv@v6
         with:
           version: '0.11.28'
           python-version: '3.12'
       - run: uv sync --locked
         working-directory: backend
+      - run: npx tsc --noEmit
+      - run: node --test tests/*.test.mjs
+      - run: npm run build
       - name: Verify frozen D1 data through Python fitting and Worker model promotion
         run: node --test tests/pipeline.test.mjs
         env:

@@ -1,0 +1,352 @@
+SafeNight regression checks, 2026-11-05T10:34:54+09:00
+Node v26.5.0 / npm 11.17.0 / uv 0.11.28 / Python 3.12.13 / isolated pgserver PostgreSQL 16.2.
+Cloud command as entered: SAFENIGHT_PIPELINE_PYTHON_QA=1 node --test tests/*.test.mjs
+Backend pytest command (invoked by owned pgserver wrapper): uv run --locked pytest -q
+Backend fixtures read SAFENIGHT_TEST_DATABASE_URL in test_pipeline_api.py and test_repository.py.
+UV_OFFLINE=1 and npm_config_offline=true; preinstalled dependencies. uv, npm, Ruff, pytest and temporary-file caches task-scoped.
+Cloud tests: 217 passed, 0 failed, 0 skipped; backend pytest: 81 passed, 0 failed, 0 skipped. All six checks exited 0.
+Generated cloud/dist/server/wrangler.json: 1345 bytes, sha256 e6d4e4561517d52837d2b0ea8f86b936ff462e564d22bf099087b06f6f914739.
+Production build classified 12 API routes. The root page appeared as unknown in vinext static classification. Node emitted DEP0205 during the build.
+Standalone work/safenight build outside this regression scope. Changed collection and sync run on internal routes.
+Real CLI command output (terminal formatting stripped):
+--- cloudtests ---
+cwd=/Users/yumin/Documents/ChatGPT/Safenight/cloud invocation=env SAFENIGHT_PIPELINE_PYTHON_QA=1 node --test tests/cloud-auth.test.mjs tests/cloud-client.test.mjs tests/cloud-jobs.test.mjs tests/cloud-lineage.test.mjs tests/cloud-providers.test.mjs tests/cloud-store.test.mjs tests/cloud-worker-http.test.mjs tests/context-data.test.mjs tests/context-mirror.test.mjs tests/context-refresh.test.mjs tests/context-store.test.mjs tests/location-assessment.test.mjs tests/location-sync.test.mjs tests/pipeline-client.test.mjs tests/pipeline.test.mjs tests/place-search.test.mjs tests/population-collection.test.mjs tests/population-store.test.mjs tests/population.test.mjs tests/serving.test.mjs
+✔ accepts the configured operator credential (23.213208ms)
+✔ rejects a different credential despite authenticated Site access (1.342334ms)
+✔ rejects missing caller credentials (1.025792ms)
+✔ fails closed when operator configuration is absent (0.314709ms)
+{"event":"backup_uploaded","sha":"a0565b5803a096895efe4b184a1ea75383a96cfa425c93fb250fbe0d91136efc","bytes":18}
+{"event":"raw_uploaded","count":3}
+{"event":"import_start","job_id":"job-sensor_locations","source":"sensor_locations","day":"2026-11-03","status":"pending","next_page":1,"fetched_rows":0,"inserted_rows":0}
+{"event":"import","job_id":"job-sensor_locations","source":"sensor_locations","day":"2026-11-03","status":"succeeded","next_page":2,"fetched_rows":1,"inserted_rows":1}
+{"event":"import_start","job_id":"job-sdot","source":"sdot","day":"2026-11-03","status":"pending","next_page":1,"fetched_rows":0,"inserted_rows":0}
+{"event":"import","job_id":"job-sdot","source":"sdot","day":"2026-11-03","status":"succeeded","next_page":2,"fetched_rows":1,"inserted_rows":1}
+{"event":"raw_uploaded","count":3}
+✔ imports backups and raw bytes before positions and S-DoT, then resumes without duplicate writes (85.053375ms)
+✔ refuses a manifest path escaping the export directory before any upload (9.789875ms)
+{"event":"raw_uploaded","count":0}
+{"event":"import_start","job_id":"job-sdot","source":"sdot","day":"2026-11-03","status":"running","next_page":2,"fetched_rows":1,"inserted_rows":1}
+{"event":"start","job_id":"job-sdot","source":"sdot","day":"2026-11-03","status":"running","next_page":1,"fetched_rows":0,"inserted_rows":0}
+✔ finalizes a fully staged running import on resume without resubmitting observations (8.829125ms)
+✔ does not retry an unauthorized write or expose response data (1.42625ms)
+✔ reports a deferred due plan instead of claiming successful collection (2.058708ms)
+✔ stops a nonterminal collect job at its configured step budget (1.380333ms)
+✔ stages one page without exposing partial results (17.634417ms)
+✔ resumes from a durable cursor and publishes only the final page (0.88925ms)
+✔ archives a malformed response before recording a failed job (0.504667ms)
+✔ does not request a page while another caller holds its lease (0.067708ms)
+✔ reads the current durable cursor after winning a later lease (0.635042ms)
+✔ rejects total-count drift after retaining the raw response (0.249667ms)
+✔ rethrows programming failures while releasing the lease (0.235917ms)
+✔ does not repeat source work for an already successful job (0.04725ms)
+✔ switches the latest eligible Korean day at the configured collection hour (0.169667ms)
+✔ includes the previous full day at Korean03:00 (0.091125ms)
+✔ plans missing checkpoint days in order before correction rechecks (0.073167ms)
+✔ does not silently skip a gap beyond the source retention window (0.047292ms)
+✔ resumes a pending job instead of planning a parallel source window (0.058958ms)
+✔ defers retries for fifteen minutes after a provider failure (0.038959ms)
+✔ skips correction days already successfully collected on the current Korean day (0.08425ms)
+✔ does not count bootstrap imports as a successful cloud correction run (0.049958ms)
+✔ publishes 1-row staged D1 window after an interrupted final step without another source request (952.627ms)
+✔ publishes 0-row staged D1 window after an interrupted final step without another source request (539.936541ms)
+✔ collects two HTTP-shaped pages through real D1/R2 and publishes after resume (884.6615ms)
+✔ retains real R2 malformed bytes while failing the D1 job without publication (303.075ms)
+✔ fails repeated source pages through real D1 without exposing the staged day (495.327667ms)
+✔ records system visibility after the provider response instead of at request start (331.062959ms)
+✔ reconstructs old measurement and position when corrections are published later (1511.458334ms)
+✔ persists one downstream job when publication is retried (463.062542ms)
+✔ rolls back pointers and history when downstream enqueue fails (408.602583ms)
+✔ preserves populated old tables on upgrade without inventing publication times (422.183542ms)
+✔ rejects incompatible model lineage through composite version foreign keys (468.287208ms)
+✔ rejects duplicate predictions and incompatible feature versions (431.309542ms)
+✔ rejects unsupported scores and running work without a lease (363.036667ms)
+✔ records the selected winner rather than a lower-priority staged revision (370.682334ms)
+✔ parses verified clocks and preserves original fields, missingness and zero (7.140833ms)
+✔ keeps small source-clock reversal as quality evidence (0.501167ms)
+✔ rejects outside requested day (0.322792ms)
+✔ rejects large clock reversal (0.112542ms)
+✔ rejects invalid calendar date (0.089584ms)
+✔ rejects invalid hour (0.076209ms)
+✔ rejects nonfinite lux (0.084166ms)
+✔ rejects hexadecimal lux (0.078625ms)
+✔ rejects negative noise (0.116417ms)
+✔ rejects out-of-range lux (0.140583ms)
+✔ accepts documented empty envelope without treating authentication errors as empty data (0.098ms)
+✔ rejects authentication envelope (0.070042ms)
+✔ rejects a short nonfinal page (0.066334ms)
+✔ rejects malformed JSON (0.063875ms)
+✔ recognizes offset ISO clocks independently of machine timezone (0.038458ms)
+✔ rejects invalid query day before making a network request (0.172334ms)
+✔ requests the exact day and page while returning unparsed original bytes (4.501625ms)
+✔ does not retry or expose the URL after an HTTP failure (2.096542ms)
+✔ sanitizes an aborted request (0.14275ms)
+✔ rejects declared oversized responses (0.465709ms)
+✔ keeps Korean midnight boundaries exact (0.040625ms)
+✔ archives exact bytes in actual R2 and deduplicates repeated content (652.5405ms)
+✔ keeps staged observations private until the final atomic publish (592.29125ms)
+✔ finalizes a fully staged import after its interrupted worker lease expires (501.78525ms)
+✔ returns the completed import unchanged when finalization is retried (434.941125ms)
+✔ resolves the latest sensor measurement with the location effective at that time (628.645125ms)
+✔ deduplicates an imported record and its later recollection without losing legacy lineage (409.551667ms)
+✔ keeps searchable district names from actual S-DoT fields when location payloads only contain coordinates (388.505167ms)
+✔ selects a higher-rank correction while retaining the original revision (339.611875ms)
+✔ refuses an ambiguous same-priority value without publishing partial changes (288.777167ms)
+✔ uses a newer source update timestamp at the same rank (271.805834ms)
+✔ blocks a competing source job and allows lease takeover only after expiry (160.402333ms)
+✔ rolls back the entire D1 batch when ownership changes immediately before stage commit (181.185708ms)
+✔ counts duplicate source rows but stores only one logical revision and safely replays the page (195.497417ms)
+✔ rejects repeated nonempty pages instead of treating them as complete coverage (229.021959ms)
+✔ does not advance the checkpoint across an uncollected day (214.894209ms)
+✔ keeps raw bytes and failed history while permitting a new attempt (199.908875ms)
+{"fixture":"synthetic-25000-row-day","publish_ms":407}
+✔ publishes a full day of25000 revisions and keeps latest reads at sensor grain (5589.738875ms)
+✔ constructs bounded provider requests in the actual Worker runtime (315.419ms)
+✔ rejects redirects without forwarding the provider credential (191.043625ms)
+✔ Jamsil Station has source-backed lighting and camera quantities with their distinct units (31.816416ms)
+✔ a location with no source coverage returns unknown counts, never a false zero or score (7.797042ms)
+✔ radius filters known source records, includes coincident fixtures, and sorts nearest independently (0.3195ms)
+✔ snapshot provenance validation rejects untraceable, duplicate, and incorrect records (46.499208ms)
+✔ invalid requests cannot bypass distance filtering (0.321666ms)
+✔ CCTV count sums source camera quantities instead of counting installation records (0.171916ms)
+✔ CCTV never accepts a missing, fractional, negative, or unobserved camera quantity (0.3095ms)
+✔ bounding-box prefilter preserves exact circular facility counts (70.551042ms)
+✔ manifest rejects stale collections, arbitrary hosts/paths, role omissions, and false raw representations (3.049666ms)
+✔ all four sources use one pinned manifest and preserve current data until verified publication (2666.714958ms)
+✔ tampered mirror bytes are rejected before staging and leave the current snapshot unchanged (754.82325ms)
+✔ a correctly hashed receipt pointing at a different file is rejected by the source chain (265.4175ms)
+✔ yesterday Korean-calendar collection cannot count as today even when less than thirty-six hours old (211.135459ms)
+✔ rejects an unexpected published manifest before pinning or staging any source (183.076959ms)
+✔ downloads one source, archives each response before parsing, and preserves original dates (29.351708ms)
+✔ malformed or collapsed source data is archived and rejected instead of replacing current data (13.039583ms)
+✔ license changes stop before the CSV is requested (1.591458ms)
+✔ upstream HTTP rejection is archived before the refresh fails (0.659166ms)
+✔ provider requests reject redirects and oversized HTML without following arbitrary locations (8.318167ms)
+✔ actual Worker runtime decodes EUC-KR and executes bounded public source parsing (767.824958ms)
+✔ protected HTTP writer publishes all four sources in real D1/R2 and reuses the completed daily job (831.53225ms)
+✔ seeds immutable facilities once and never overwrites an existing current pointer (679.893666ms)
+✔ resumes a persisted source cursor after lease takeover and only publishes all four sources together (1063.480958ms)
+✔ treats metadata-only daily checks as unchanged and refreshes checked_at without a new data version (729.162333ms)
+✔ keeps source artifacts and the previous current dataset when a partial refresh fails (388.962208ms)
+✔ atomically rolls back failed final publication and resumes completion without downloading again (627.313625ms)
+✔ keeps the requested location and interpolates nearer observations with inverse squared distance (1.14625ms)
+✔ uses the 25 meter distance floor and preserves genuine zero measurements and scores (0.124208ms)
+✔ excludes stale, future, unsupported and missing observations even when a stale cached score is present (0.121125ms)
+✔ retains observations exactly at the inclusive thirty hour lifetime boundary (0.068208ms)
+✔ keeps the radius bounded to 1500 meters rather than borrowing a distant sensor (0.078292ms)
+✔ limits the estimate to eight nearest usable sensors and resolves equal distances deterministically (0.131166ms)
+✔ keeps a perfect source estimate inside the score contract despite floating point weight summation (0.084292ms)
+✔ returns a clear null estimate with no nearby source (0.057417ms)
+✔ returns a clear null estimate with no usable source (0.051375ms)
+✔ does not extend Seoul service coverage merely because a sensor fixture exists outside the city (0.091959ms)
+✔ parses a simple decimal location query without altering the requested coordinate (1.0105ms)
+✔ rejects invalid or ambiguous query "" (0.176791ms)
+✔ rejects invalid or ambiguous query "lat=&lon=127.1" (0.1065ms)
+✔ rejects invalid or ambiguous query "lat=NaN&lon=127.1" (0.066958ms)
+✔ rejects invalid or ambiguous query "lat=91&lon=127.1" (0.07775ms)
+✔ rejects invalid or ambiguous query "lat=37.5&lon=181" (0.057625ms)
+✔ rejects invalid or ambiguous query "lat=37.5&lat=37.6&lon=127.1" (0.030584ms)
+✔ rejects invalid or ambiguous query "lat=37.5&lon=127.1&radius=999999" (0.067417ms)
+✔ rejects invalid or ambiguous query "lat=0x25&lon=127.1" (0.048542ms)
+✔ rejects missing and ambiguous provider workbook selectors (1.906334ms)
+▶ normalizes workbooks and publishes through the actual protected Worker routes, D1 and R2
+  ✔ keeps the interrupted 200-row first page private (250.781083ms)
+  ✔ resumes only the last page with the original provider date (139.824833ms)
+  ✔ performs no raw or import write for identical bytes across independent runs (114.877292ms)
+  ✔ rejects HTML and an XLSX with invalid Korean coordinates before any cloud request (211.261958ms)
+  ✔ publishes a same-day correction and a later reversion as separate revisions (326.737125ms)
+  ✔ keeps changed bytes out of a partial job and supersedes it once idle (348.946ms)
+  ✔ recognizes a previously completed migration with an ordinary UUID job id (149.262833ms)
+✔ normalizes workbooks and publishes through the actual protected Worker routes, D1 and R2 (2531.539125ms)
+✔ does not report facility publication complete until D1 current and the pinned manifest agree (9.146167ms)
+✔ bounds outbox retries and treats a nonempty queue as incomplete (0.405792ms)
+✔ protects the Worker pipeline before reading or writing storage (720.942709ms)
+✔ runs the Worker outbox into reusable predictions and point audit records (1037.384333ms)
+✔ resumes a twenty-row derivation page without repeating or losing keys (1497.895292ms)
+✔ does not commit inputs or cursors when derivation loses its lease (912.325958ms)
+✔ reports missing labels without manufacturing a training run (665.337042ms)
+✔ freezes external labels and blocks a candidate lacking independent validation (788.545125ms)
+✔ serializes concurrent model switches and retains a new rollback generation (721.303208ms)
+✔ trains from a frozen two-day dataset and promotes only a fully validated candidate (3763.138875ms)
+✔ does not reuse an old label when the currently selected observation is corrected (690.349958ms)
+✔ normalizes submitted query whitespace while rejecting unbounded and control-character input (1.135167ms)
+✔ searches station intent with a railway filter instead of accepting a same-name bus stop (0.158917ms)
+✔ preserves actual source coordinates and ranks exact station before similarly named stations (2.02975ms)
+✔ filters wrong-country, outside-service, duplicate and wrong-category results without inventing replacements (0.23875ms)
+✔ rejects malformed provider shapes and coordinates (0.168959ms)
+✔ does not duplicate a station suffix already present in the source label (0.080166ms)
+✔ preserves named shops and unnamed address points without guessing a building name (0.13875ms)
+✔ does not treat malformed JSON or a source network failure as empty search results (5.25475ms)
+✔ reuses same-query cache without another provider request (0.779375ms)
+✔ coalesces in-flight identical searches and rejects different-query bursts (0.543166ms)
+✔ expires cache instead of serving a permanently frozen place result (0.758709ms)
+✔ returns a typed provider failure for HTTP 302 (0.412083ms)
+✔ returns a typed provider failure for HTTP 429 (0.202625ms)
+✔ returns a typed provider failure for HTTP 503 (0.237292ms)
+✔ permits provider endpoint replacement but never accepts non-HTTPS or credential-bearing configuration (0.076125ms)
+✔ constructs the configured Photon request in the actual Worker runtime (431.520584ms)
+✔ stores exact upstream bytes and a normalized observation and reuses the published cache on retry (808.122125ms)
+ℹ {"attempt":1,"http":200,"body":{"areas":[{"area_code":"POI001","status":"ok"}],"total":121,"next_cursor":1}}
+ℹ {"attempt":2,"http":200,"body":{"areas":[{"area_code":"POI001","status":"ok"}],"total":121,"next_cursor":1}}
+ℹ {"area":"POI001","minimum":120,"maximum":180,"r2_key":"population/raw/1fe489cee23643e85f3636462e99327909d407782fcbbcdb2e0b50c65cb05580","upstream_calls":1,"joined_d1_rows":1}
+✔ rejects unauthorized, malformed, out-of-roster, oversized and coordinate-bearing commands before writes (394.149333ms)
+ℹ {"http":401,"body":{"error":"unauthorized"}}
+ℹ {"http":400,"body":{"error":"invalid_json"}}
+ℹ {"http":400,"body":{"error":"invalid_population_command"}}
+ℹ {"http":400,"body":{"error":"invalid_population_command"}}
+ℹ {"http":400,"body":{"error":"invalid_population_command"}}
+ℹ {"http":400,"body":{"error":"invalid_population_command"}}
+ℹ {"http":413,"body":{"error":"request_too_large"}}
+✔ invalid refresh archives rejected bytes, retains the prior cache, and lease backoff prevents a second source call (380.433958ms)
+ℹ {"http":200,"body":{"areas":[{"area_code":"POI001","status":"failed","reason":"invalid_source_payload"}],"total":121,"next_cursor":1}}
+ℹ {"http":200,"body":{"areas":[{"area_code":"POI001","status":"failed","reason":"request_throttled"}],"total":121,"next_cursor":1}}
+✔ concurrent cold requests share one D1 lease and one upstream request (313.693583ms)
+ℹ {"requests":3,"outcomes":["ok","failed","failed"],"upstream_calls":1}
+✔ lease storage faults return a retryable HTTP failure without contacting the upstream (292.386875ms)
+ℹ {"http":503,"body":{"error":"population_collection_unavailable"},"upstream_calls":0}
+{"event":"population_area_failed","area_code":"POI001","status":"failed","reason":"source_unavailable"}
+✔ scheduled client completes all published areas through Worker HTTP and never succeeds with a failed area (1017.83575ms)
+ℹ {"attempted":121,"published":120,"failed":"POI001"}
+✔ scheduled client verifies the complete published roster and rejects premature completion (856.537791ms)
+ℹ {"status":"complete","areas":121}
+✔ archives invalid provider bytes in real R2 before any normalized observation exists (622.048166ms)
+✔ persists a normalized area aggregate and a ten-minute current cache (338.6715ms)
+✔ marks the exact cache expiry stale without discarding the original observation (276.462125ms)
+✔ preserves a valid zero population range instead of interpreting it as missing (264.248917ms)
+✔ deduplicates identical area/time/raw observations while refreshing successful retrieval metadata (288.79775ms)
+✔ retains a same-time source correction under a new raw digest and updates the current pointer (306.16275ms)
+✔ a rejected provider response cannot replace or refresh an earlier successful cache (255.4215ms)
+✔ archives an older source observation without rolling current population backward (256.317417ms)
+✔ refuses a delayed same-time response to overwrite a newer successful retrieval (240.452459ms)
+✔ rolls back history publication when the cache transaction fails while retaining the raw response (222.568208ms)
+✔ rejects oversized raw data and mismatched or personal-location fields before publication (192.301708ms)
+✔ normalizes equivalent timestamp offsets before constructing immutable identity (204.421916ms)
+✔ limits a shared area across independent consumers and retains failure backoff after release (177.512416ms)
+✔ uses exact official polygons rather than their bounding rectangles or nearest labels (0.801458ms)
+✔ handles polygon boundaries, holes and overlapping source areas (0.097708ms)
+✔ uses actual segment distance for a nearby area and rejects regions farther than 250m (0.54175ms)
+✔ labels actual Jamsil nearby-region data with its source area and measured boundary distance (17.520458ms)
+✔ parses actual response field names, Korean clock and a valid zero population (0.1595ms)
+✔ rejects missing value without turning it into a population estimate (0.501042ms)
+✔ rejects null value without turning it into a population estimate (0.097334ms)
+✔ rejects inverted range without turning it into a population estimate (0.074042ms)
+✔ rejects impossible calendar without turning it into a population estimate (0.098708ms)
+✔ rejects future observation without turning it into a population estimate (0.103458ms)
+✔ does not attach a different area or authorization envelope to the selected coordinate (0.191417ms)
+✔ distinguishes fresh estimates, old observations and replacement data (0.094292ms)
+✔ returns uncovered or missing-key states without calling the source (0.139375ms)
+✔ coalesces concurrent area requests and keeps source data cached for ten minutes (1.107333ms)
+✔ archives raw bytes before parsing and only publishes a DB-preserved valid observation (0.542041ms)
+✔ preserves invalid responses but never writes an observation, and refuses credential-reflecting responses (0.709084ms)
+✔ does not display a newly fetched number if durable storage fails (0.373ms)
+✔ reuses a durable cache across instances and labels expired fallback as past data (0.360667ms)
+✔ rejects missing, blank, nonfinite and invalid coordinate queries (2.264041ms)
+✔ constructs the population provider request inside the actual Worker runtime (378.735083ms)
+✔ matches Python scores and abstention for actual inputs (72.98775ms)
+✔ matches Python scores and abstention for threshold-adjacent inputs (2.31075ms)
+✔ expires a previously scored observation after thirty hours (0.08425ms)
+✔ retains a score at the inclusive thirty-hour boundary (0.100333ms)
+✔ rejects a changed artifact byte before inference (4.877875ms)
+✔ rejects a digest-valid cyclic tree (95.325958ms)
+✔ abstains for missing measurement (0.180209ms)
+✔ abstains for out-of-domain measurement (0.055459ms)
+✔ abstains for unknown sensor (0.115042ms)
+✔ abstains for moved sensor (0.104084ms)
+✔ abstains for future observation (0.0475ms)
+✔ abstains for changed feature contract (0.041791ms)
+✔ preserves stale precedence over missing measurements (0.061208ms)
+✔ abstains when no model is loaded (0.035916ms)
+✔ abstains when no observation exists (0.026542ms)
+✔ threshold fixtures exercise float32 rounding rather than only rounded scores (3.912166ms)
+ℹ tests 217
+ℹ suites 0
+ℹ pass 217
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11640.459417
+exit=0
+--- cloudtsc ---
+cwd=/Users/yumin/Documents/ChatGPT/Safenight/cloud invocation=npx tsc --noEmit
+exit=0
+--- cloudbuild ---
+cwd=/Users/yumin/Documents/ChatGPT/Safenight/cloud invocation=npm run build
+
+> site-creator-vinext-starter@0.1.0 build
+> node scripts/run-framework.mjs build
+
+
+  vinext build  (Vite 8.0.13)
+
+(node:90128) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[1/5] analyze client references...
+
+transforming...✓ 393 modules transformed.
+rendering chunks...
+✓ built in 468ms
+[2/5] analyze server references...
+
+transforming...✓ 234 modules transformed.
+rendering chunks...
+✓ built in 173ms
+[3/5] build rsc environment...
+
+transforming...✓ 390 modules transformed.
+rendering chunks...
+computing gzip size...
+✓ built in 558ms
+[4/5] build client environment...
+
+transforming...✓ 2036 modules transformed.
+rendering chunks...
+computing gzip size...
+✓ built in 600ms
+[5/5] build ssr environment...
+
+transforming...✓ 240 modules transformed.
+rendering chunks...
+computing gzip size...
+✓ built in 226ms
+
+  Route (app)
+  ┌ ? /                          
+  ├ λ /api/assessments/:sensor_id
+  ├ λ /api/assessments/location  
+  ├ λ /api/context               
+  ├ λ /api/internal/collection   
+  ├ λ /api/internal/context      
+  ├ λ /api/internal/import       
+  ├ λ /api/internal/pipeline     
+  ├ λ /api/internal/population   
+  ├ λ /api/internal/raw          
+  ├ λ /api/map                   
+  ├ λ /api/places                
+  └ λ /api/population            
+
+  λ API  ? Unknown
+
+  ? Some routes could not be classified. vinext currently uses static analysis
+    and cannot detect dynamic API usage (headers(), cookies(), etc.) at build time.
+    Automatic classification will be improved in a future release.
+
+  Build complete. Run `vinext start` to start the production server.
+
+exit=0
+--- ruff ---
+cwd=/Users/yumin/Documents/ChatGPT/Safenight/backend invocation=uv run --locked ruff check .
+All checks passed!
+exit=0
+--- basedpyright ---
+cwd=/Users/yumin/Documents/ChatGPT/Safenight/backend invocation=uv run --locked basedpyright
+0 errors, 0 warnings, 0 notes
+exit=0
+--- pytest ---
+cwd=/Users/yumin/Documents/ChatGPT/Safenight/backend invocation=.venv/bin/python /tmp/sn-final.yAuz3C/testpg.py
+Isolated PostgreSQL PostgreSQL 16.2 on aarch64-apple-darwin23.5.0, compiled by Apple clang version 15.0.0 (clang-1500.0.40.1), 64-bit pid 89982 directory /private/tmp/sn-final.yAuz3C/pgdata database postgres Unix socket verified
+........................................................................ [ 88%]
+.........                                                                [100%]
+81 passed in 2.71s
+PostgreSQL stopped and PGDATA removed
+exit=0
+Cleanup read-back: /tmp/sn-final.yAuz3C absent after recursive removal. PostgreSQL PID stop verified by wrapper before removal. No deployment.

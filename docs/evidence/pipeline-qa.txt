@@ -1,0 +1,17 @@
+✔ protects the Worker pipeline before reading or writing storage (264.335333ms)
+✔ runs the Worker outbox into reusable predictions and point audit records (482.274584ms)
+✔ resumes a twenty-row derivation page without repeating or losing keys (854.309167ms)
+✔ does not commit inputs or cursors when derivation loses its lease (707.797166ms)
+✔ reports missing labels without manufacturing a training run (571.071333ms)
+✔ freezes external labels and blocks a candidate lacking independent validation (727.102417ms)
+✔ serializes concurrent model switches and retains a new rollback generation (732.038958ms)
+✔ trains from a frozen two-day dataset and promotes only a fully validated candidate (4165.110417ms)
+✔ does not reuse an old label when the currently selected observation is corrected (721.585334ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9440.3695
