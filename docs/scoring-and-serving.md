@@ -4,37 +4,37 @@
 
 센서 한 곳의 한 시간 관측을 기준으로 조도·소음·소음 변동에 따라 점수를 깎고, 반경 25m에 기록된 시설 수에 따라 점수를 더했다. $L$은 평균 조도(lx), $n$은 평균 소음(dB)이다. 아래에서 $c(z)=\min(100,\max(0,z))$는 값을 0~100점으로 제한한다.
 
-$$
+```math
 I = c\!\left(100-\frac{L}{3}\right),
 \qquad v = \frac{n_{\max}-n_{\min}}{4}
-$$
+```
 
-$$
+```math
 N =
 \begin{cases}
 c(100-2.5n), & n < 40 \\[3pt]
 \dfrac{20}{30}(n-40), & 40 \le n \le 70 \\[5pt]
 \min\!\left(100,\,20+\dfrac{80}{40}(n-70)\right), & n > 70
 \end{cases}
-$$
+```
 
-$$
+```math
 T =
 \begin{cases}
 50, & n=0 \\[3pt]
 c\!\left(50-\dfrac{100v}{n+10^{-5}}\right), & n\ne 0
 \end{cases}
-$$
+```
 
 CCTV·가로등·보안등의 설치 기록 수를 각각 $k_C, k_G, k_B$라 두고 세 시설의 기여분을 구했다.
 
-$$
+```math
 C=\min(100,25k_C),\quad G=\min(100,20k_G),\quad B=\min(100,30k_B)
-$$
+```
 
-$$
+```math
 S=c\!\left(100-0.30I-0.15N-0.10T+0.25C+0.15G+0.05B\right)
-$$
+```
 
 시설 수는 공개 자료에 나온 좌표 행 수다. 가중치와 소음 구간은 프로젝트에서 정했다. 소음 변동은 최대·최소 차이의 4분의 1로 잡았고, 이 값이 커질수록 원식의 소음 변동 차감분이 줄어든다. 관측값과 시설 수가 0 이상일 때 환경점수 $S$의 범위는 50~100점이다. [학습 자료](../backend/data/training/README.md) · [원본 자료 기록](../backend/data/training/environment_proxy.provenance.json)
 
@@ -42,13 +42,13 @@ $$
 
 기존 환경점수를 $R = 100 - S$로 뒤집어 값이 클수록 환경 부담이 큰 위험점수를 만들었다. 랜덤 포레스트의 예측을 조도, 소음, CCTV, 가로등, 보안등의 다섯 부분의존도(PDP) 곡선으로 나눴다. 조도와 소음은 각각 같은 관측에 속한 측정값을 묶어 바꿨다. 시설 곡선은 수량을 늘렸을 때 위험점수가 같거나 낮아지도록 맞췄다.
 
-$$
+```math
 R_{\mathrm{new}}(x)
 = \operatorname{clip}_{[0,50]}\!\left[
   \alpha + \sum_{B} w_B\,\widetilde{P}_B(x_B)
 \right],
 \qquad w_B \ge 0
-$$
+```
 
 $x_B$는 묶음 $B$에 속한 입력값이고, $\widetilde{P}_B(x_B)$는 해당 PDP 곡선에서 기준 평균을 뺀 기여분이다. $\alpha$는 절편, $w_B$는 묶음별 가중치다. 위험점수를 환경점수로 환산할 때는 $S_{\mathrm{new}}(x)=100-R_{\mathrm{new}}(x)$를 쓴다.
 
@@ -76,10 +76,10 @@ $x_B$는 묶음 $B$에 속한 입력값이고, $\widetilde{P}_B(x_B)$는 해당 
 
 센서 $i$까지의 거리를 $d_i$(m), 그 센서의 점수를 $s_i$라 두면 장소 참고점수는 다음과 같다.
 
-$$
+```math
 w_i=\frac{1}{\max(25,d_i)^2},
 \qquad
 S_{\mathrm{place}}=\frac{\sum_i w_i s_i}{\sum_i w_i}
-$$
+```
 
 송파구·서초구의 시설은 검색 위치 반경 1km 안의 설치 기록을 집계한다. 인구는 서울시 집계 구역별 추정치다. 화면에는 두 자료를 센서 점수와 별도로 표시한다. [센서 선택과 가중치](../cloud/app/server/location-assessment.ts) · [시설 집계](../cloud/app/server/context-data.ts) · [인구 조회](../cloud/app/server/population.ts)

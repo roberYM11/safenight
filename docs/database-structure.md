@@ -179,7 +179,7 @@ erDiagram
 
 `training_runs → dataset_snapshots`는 ID와 입력·목표 버전을 함께 묶은 **복합 FK**다. 모델의 학습 실행, 예측의 피처·모델, 활성 모델의 이름·세대·모델도 복합 FK로 맞춘다. 기존 번들 모델은 학습 실행이 없어 `training_run_id`가 NULL일 수 있다. 전환 이력의 `previous_version`도 같은 모델 테이블을 참조하지만 최초 전환에는 NULL을 허용한다. 지점 보간 결과는 `point_contributors`에 실제 센서 예측 ID·거리·가중치를 남긴다.
 
-**파일 안의 소속 관계:** 데이터셋의 정확한 피처·정답 목록은 R2 manifest·고정 JSON에 기록한다. 따라서 `dataset_snapshots → feature_snapshots`를 물리적 FK로 그리지 않았다. FK·컬럼 전체는 [외래키 목록](database-foreign-keys.csv)·[컬럼 목록](database-columns.csv)에서 확인할 수 있다.
+데이터셋에 포함한 피처·정답 목록과 지점별 시설 스냅샷은 R2 파일에서 참조한다. D1은 고정한 JSON의 주소와 해시를 저장한다. [외래키 목록](database-foreign-keys.csv) · [컬럼 목록](database-columns.csv)
 
 기존 17개는 수집 9개(`collection_jobs`, `raw_objects`, `observation_revisions`, `current_observations`, `latest_observations`, `job_revisions`, `job_pages`, `source_checkpoints`, `operation_guards`), 시설 5개(`context_snapshots`, `context_current`, `context_refresh_jobs`, `context_raw_documents`, `context_staged_sources`), 인구 3개(`population_raw_objects`, `population_observations`, `population_cache`)다.
 
@@ -190,7 +190,7 @@ erDiagram
 | `derivation_jobs` | 종류 × 입력 버전 UNIQUE. 공개 배치 또는 모델 FK, 임대·시도 횟수·오류·재개 커서 |
 | `data_releases` | 봉인한 R2 manifest 주소·해시와 사용 가능 cutoff |
 | `feature_snapshots` | 관측/위치 수정본 쌍 + 피처 버전으로 만든 ID. 관측과 위치를 각각 FK로 보존 |
-| `target_definitions` | 외부 규칙 지수의 의미·출처 설명·제공자가 기재한 원본 해시를 고정한 버전 |
+| `target_definitions` | 목표의 종류·설명·규칙 버전·출처 이름으로 고정한 목표 정의 |
 | `target_values` | 피처 수정본 × 목표 버전 UNIQUE. 정답값·목표시각·시스템 등록시각·고정 파일 참조 |
 | `dataset_snapshots` | 정확한 학습 행과 정답을 담은 R2 JSON의 주소·해시·분리 정책·표본 수 |
 | `training_runs` | 학습 실행. dataset/입력/목표 버전 복합 FK, code SHA·seed·설정·평가 결과·상태 |
@@ -201,8 +201,6 @@ erDiagram
 | `point_assessments` | 지점·평가시각·정책·release별 보간 결과 |
 | `point_contributors` | 지점 결과 × 실제 센서 예측 결과 PK. 거리와 정규화 가중치 |
 | `population_request_leases` | 구역별 외부 요청 임대와 다음 허용 시각. 여러 isolate가 공유 |
-
-데이터셋에 포함된 행과 지점별 시설 스냅샷은 R2 manifest에서 참조한다. D1에서는 데이터셋·학습 실행·모델 파일의 입력 및 목표 버전이 일치하도록 복합 외래키를 설정했다. 모델과 학습 파일은 JSON으로 저장하고 읽을 때 해시를 확인한다.
 
 ## 공개 시점과 정정 처리
 
@@ -284,6 +282,6 @@ R2 업로드는 D1 트랜잭션에 포함되지 않는다. 객체를 먼저 저�
 
 운영자가 외부 정답을 정확한 수정본에 연결할 때는 인증된 `GET /api/internal/pipeline?features_after=`로 피처 ID·센서·관측시각·관측/위치 수정본을 200개씩 내보낼 수 있다. `next_cursor`를 다음 호출에 전달하고 null이면 끝이다. 정답 정의의 `rule_version`은 생성 의미의 버전이며, 파일마다 달라지는 `source_sha256`은 해당 정답 파일의 출처 기록이다. 파일 해시만 달라졌다고 동일 규칙의 목표 버전이 쪼개지지 않도록 분리했다.
 
-2026년 11월 5일 로컬 시험에서 Cloud 201개와 Python 81개가 통과했다. [검증 기록](evidence/final-checks.txt)
+2026년 11월 5일 로컬 시험에서 Cloud 217개와 Python 81개가 통과했다. [검증 기록](evidence/final-checks.txt)
 
 정답 등록은 한 번에 최대 200행이며, 조회와 삽입은 D1 바인딩 수에 맞춰 묶는다. 동시 등록에서 같은 목표 버전·피처에 다른 값이 들어오면 DB의 고유 제약으로 전체 등록을 거부한다. 정답 파일 해시를 바꿔 기존 값을 덮어쓸 수 없다.
