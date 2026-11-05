@@ -1,7 +1,7 @@
 {
   "format": "safenight-context-mirror-v1",
-  "collected_at": "2026-11-04T23:39:50.220Z",
-  "workflow_run_id": "41935424185",
+  "collected_at": "2026-11-05T23:38:34.324Z",
+  "workflow_run_id": "42130859956",
   "sources": [
     {
       "id": "songpa-lights",
@@ -10,7 +10,7 @@
           "role": "metadata",
           "official_url": "https://www.data.go.kr/data/15097746/fileData.do",
           "representation": "extracted_metadata",
-          "original_sha256": "7451d1e91a644915dd8e984db0d36878b5eb20a7df33136a9cf62ba331370c4c",
+          "original_sha256": "427239f6c99d62799b9d7336e12ef3b8b27777698ebc77da44476ce53d29a2af",
           "sha256": "002580b00f1fd81b593b8514aef80b8cd887c969103ae83e5a8b512668ef3f1f",
           "size_bytes": 544,
           "content_type": "text/html; charset=utf-8",
@@ -20,11 +20,11 @@
           "role": "download_receipt",
           "official_url": "https://www.data.go.kr/tcs/dss/selectFileDataDownload.do",
           "representation": "raw",
-          "original_sha256": "f038eb87deb85b6769a900698eb4295931c4651da105bbb8b90fe1895ec0a51a",
-          "sha256": "f038eb87deb85b6769a900698eb4295931c4651da105bbb8b90fe1895ec0a51a",
+          "original_sha256": "64b81b18c69d6cf6a5c0a3e90cf83841c2b2ed0aaec3f5ac3ac45518876ed8fa",
+          "sha256": "64b81b18c69d6cf6a5c0a3e90cf83841c2b2ed0aaec3f5ac3ac45518876ed8fa",
           "size_bytes": 10436,
           "content_type": "text/html;charset=UTF-8",
-          "path": "objects/f038eb87deb85b6769a900698eb4295931c4651da105bbb8b90fe1895ec0a51a.bin"
+          "path": "objects/64b81b18c69d6cf6a5c0a3e90cf83841c2b2ed0aaec3f5ac3ac45518876ed8fa.bin"
         },
         {
           "role": "csv",
@@ -45,7 +45,7 @@
           "role": "metadata",
           "official_url": "https://www.data.go.kr/data/15128039/fileData.do",
           "representation": "extracted_metadata",
-          "original_sha256": "782c9f9c70409abbe3ac246f6dd7da690e087c47d8f62055d6eb2c9a837ade17",
+          "original_sha256": "2e5c718de2838246b27d7be84a0fe1bf91ef269d99e325473911a5df3fdf3344",
           "sha256": "fa5f94484d9cf2288dcf4bf0b28cff4f03f158fb3a764d6edf4d905794b145fe",
           "size_bytes": 550,
           "content_type": "text/html; charset=utf-8",
@@ -55,11 +55,11 @@
           "role": "download_receipt",
           "official_url": "https://www.data.go.kr/tcs/dss/selectFileDataDownload.do",
           "representation": "raw",
-          "original_sha256": "ec9b14f00b8749e9bfdf0640711730c029a5490c8fdc4172c1d0a733b25593ab",
-          "sha256": "ec9b14f00b8749e9bfdf0640711730c029a5490c8fdc4172c1d0a733b25593ab",
+          "original_sha256": "6c6648e5647efa5c22452bf38006162beebd84e08751343819925c754d9044b7",
+          "sha256": "6c6648e5647efa5c22452bf38006162beebd84e08751343819925c754d9044b7",
           "size_bytes": 10975,
           "content_type": "text/html;charset=UTF-8",
-          "path": "objects/ec9b14f00b8749e9bfdf0640711730c029a5490c8fdc4172c1d0a733b25593ab.bin"
+          "path": "objects/6c6648e5647efa5c22452bf38006162beebd84e08751343819925c754d9044b7.bin"
         },
         {
           "role": "csv",
@@ -80,7 +80,7 @@
           "role": "metadata",
           "official_url": "https://www.data.go.kr/data/15013094/standard.do",
           "representation": "extracted_metadata",
-          "original_sha256": "e60f62247b6a51ef6bce5de1cf59066e045232a26847abe9b53cbc1ec8e5977e",
+          "original_sha256": "23735de655b8448373a3acf9f1420141adad4b59582dab1e7ef1ec1766a0cc6d",
           "sha256": "55427b7fbfb45bdbe82ffa39f750ffe0a1b16bd284f6c81f610093e5ec8eca8f",
           "size_bytes": 331,
           "content_type": "text/html; charset=utf-8",
@@ -90,7 +90,7 @@
           "role": "download_page",
           "official_url": "https://file.localdata.go.kr/file/cctv_info/info",
           "representation": "extracted_download_page",
-          "original_sha256": "b35d6cc73c7e6f25166508b20aba92e966106d04431e1d09eb0333cb44be579c",
+          "original_sha256": "71d9967934390f202d4358cdd7c26e185a1bf0c9b003e0aa2285cda79982458b",
           "sha256": "f91c8d49af4a405226665db7e051408586ed69cbe06ebb31c2489f9c6a7866e7",
           "size_bytes": 135,
           "content_type": "text/html; charset=utf-8",
@@ -115,7 +115,7 @@
           "role": "metadata",
           "official_url": "https://www.data.go.kr/data/15013094/standard.do",
           "representation": "extracted_metadata",
-          "original_sha256": "e60f62247b6a51ef6bce5de1cf59066e045232a26847abe9b53cbc1ec8e5977e",
+          "original_sha256": "23735de655b8448373a3acf9f1420141adad4b59582dab1e7ef1ec1766a0cc6d",
           "sha256": "55427b7fbfb45bdbe82ffa39f750ffe0a1b16bd284f6c81f610093e5ec8eca8f",
           "size_bytes": 331,
           "content_type": "text/html; charset=utf-8",
@@ -125,7 +125,7 @@
           "role": "download_page",
           "official_url": "https://file.localdata.go.kr/file/cctv_info/info",
           "representation": "extracted_download_page",
-          "original_sha256": "7b2f604aacf754f2a557fc2ea3e6d60138f3bef0099f58e1e21e3cf7c49ebf54",
+          "original_sha256": "a58c4e11eec17713bc0670ed3ff38f3f7e60f8b96337d051e224f694d1c705a8",
           "sha256": "d0b15b4ec607114fe606d707159b2b411e4471cb42e809672129e059c3a3e26c",
           "size_bytes": 135,
           "content_type": "text/html; charset=utf-8",
