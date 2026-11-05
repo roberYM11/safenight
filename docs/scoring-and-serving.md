@@ -44,7 +44,7 @@ S=c\!\left(100-0.30I-0.15N-0.10T+0.25C+0.15G+0.05B\right)
 
 ```math
 R_{\mathrm{new}}(x)
-= \operatorname{clip}_{[0,50]}\!\left[
+= \mathrm{clip}_{[0,50]}\!\left[
   \alpha + \sum_{B} w_B\,\widetilde{P}_B(x_B)
 \right],
 \qquad w_B \ge 0

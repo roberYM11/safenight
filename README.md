@@ -87,7 +87,7 @@ erDiagram
 
 ```math
 R_{\mathrm{new}}(x)
-= \operatorname{clip}_{[0,50]}\!\left[
+= \mathrm{clip}_{[0,50]}\!\left[
   \alpha + \sum_{B} w_B\,\widetilde{P}_B(x_B)
 \right],
 \qquad w_B \ge 0
