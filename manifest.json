@@ -1,7 +1,7 @@
 {
   "format": "safenight-context-mirror-v1",
-  "collected_at": "2026-11-24T03:57:48.549Z",
-  "workflow_run_id": "45322997875",
+  "collected_at": "2026-11-25T02:25:33.460Z",
+  "workflow_run_id": "45532776218",
   "sources": [
     {
       "id": "songpa-lights",
@@ -10,7 +10,7 @@
           "role": "metadata",
           "official_url": "https://www.data.go.kr/data/15097746/fileData.do",
           "representation": "extracted_metadata",
-          "original_sha256": "41024e54b1aad11faa7a931e34a61c1647c9e412387ce90fe2fe31e2ac03427e",
+          "original_sha256": "281121c327c0bfb4289441ccedcd5a0e9ed99a086f86d9d30121196cfa5b2429",
           "sha256": "002580b00f1fd81b593b8514aef80b8cd887c969103ae83e5a8b512668ef3f1f",
           "size_bytes": 544,
           "content_type": "text/html; charset=utf-8",
@@ -20,11 +20,11 @@
           "role": "download_receipt",
           "official_url": "https://www.data.go.kr/tcs/dss/selectFileDataDownload.do",
           "representation": "raw",
-          "original_sha256": "32edccc6be955bb5908c0b6f84e2c7000e7ec5daf7acca95c48dc61b72d8b3ac",
-          "sha256": "32edccc6be955bb5908c0b6f84e2c7000e7ec5daf7acca95c48dc61b72d8b3ac",
+          "original_sha256": "2533796895396905ffd3f5de9cacb4bb6529b1ae4c7206bb6d858d90784cb031",
+          "sha256": "2533796895396905ffd3f5de9cacb4bb6529b1ae4c7206bb6d858d90784cb031",
           "size_bytes": 10436,
           "content_type": "text/html;charset=UTF-8",
-          "path": "objects/32edccc6be955bb5908c0b6f84e2c7000e7ec5daf7acca95c48dc61b72d8b3ac.bin"
+          "path": "objects/2533796895396905ffd3f5de9cacb4bb6529b1ae4c7206bb6d858d90784cb031.bin"
         },
         {
           "role": "csv",
@@ -45,7 +45,7 @@
           "role": "metadata",
           "official_url": "https://www.data.go.kr/data/15128039/fileData.do",
           "representation": "extracted_metadata",
-          "original_sha256": "66b0ff3b669e81f49a0cdd799b63596a7207775526e4150c115ef818fd70e159",
+          "original_sha256": "735b0a696f708444806687e40c528a6e37e26a020ee12c7d975b6e8496d785f9",
           "sha256": "fa5f94484d9cf2288dcf4bf0b28cff4f03f158fb3a764d6edf4d905794b145fe",
           "size_bytes": 550,
           "content_type": "text/html; charset=utf-8",
@@ -55,11 +55,11 @@
           "role": "download_receipt",
           "official_url": "https://www.data.go.kr/tcs/dss/selectFileDataDownload.do",
           "representation": "raw",
-          "original_sha256": "ee8fa3296656cbeed8759c88e5ca77a435798d8316f6b2e741fc62990a45a247",
-          "sha256": "ee8fa3296656cbeed8759c88e5ca77a435798d8316f6b2e741fc62990a45a247",
+          "original_sha256": "ac22d8d6f30d5ea355edf495742780cc8c1964a24f36689b70449485d4632fe7",
+          "sha256": "ac22d8d6f30d5ea355edf495742780cc8c1964a24f36689b70449485d4632fe7",
           "size_bytes": 10975,
           "content_type": "text/html;charset=UTF-8",
-          "path": "objects/ee8fa3296656cbeed8759c88e5ca77a435798d8316f6b2e741fc62990a45a247.bin"
+          "path": "objects/ac22d8d6f30d5ea355edf495742780cc8c1964a24f36689b70449485d4632fe7.bin"
         },
         {
           "role": "csv",
@@ -90,7 +90,7 @@
           "role": "download_page",
           "official_url": "https://file.localdata.go.kr/file/cctv_info/info",
           "representation": "extracted_download_page",
-          "original_sha256": "4effbca76d96d6e7ef601ec32c82233e8f5b0b8317e96ead7c52720489113920",
+          "original_sha256": "d551c84d4d8d61ff636a04da60e414df26afde129261ec453bde5da2245d07e2",
           "sha256": "f91c8d49af4a405226665db7e051408586ed69cbe06ebb31c2489f9c6a7866e7",
           "size_bytes": 135,
           "content_type": "text/html; charset=utf-8",
@@ -125,7 +125,7 @@
           "role": "download_page",
           "official_url": "https://file.localdata.go.kr/file/cctv_info/info",
           "representation": "extracted_download_page",
-          "original_sha256": "c1cd2acc25923d86b294cc5f2ceff438239b79dfb551480cf74d7391729a387e",
+          "original_sha256": "2038eadeaa4a051e1121c572e0679633d7b003505a7b4500d2e3ca19731be0dd",
           "sha256": "d0b15b4ec607114fe606d707159b2b411e4471cb42e809672129e059c3a3e26c",
           "size_bytes": 135,
           "content_type": "text/html; charset=utf-8",
